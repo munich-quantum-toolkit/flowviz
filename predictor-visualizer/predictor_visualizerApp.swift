@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct predictor_visualizerApp: App {
+struct predictor_visualizerApp: App {    
     var body: some Scene {
         WindowGroup {
             ContentView()

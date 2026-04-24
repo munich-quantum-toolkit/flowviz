@@ -6,16 +6,41 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContentView: View {
+    @State private var dataHandler = DataHandler()
+    @State private var selectedTrace: CompilationTrace?
+    @State private var isShowingFilePicker = false
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationSplitView {
+            NavigationListView(traces: dataHandler.traces, selectedTrace: $selectedTrace, isShowingFilePicker: $isShowingFilePicker)
+        } detail: {
+            if let selected = selectedTrace {
+                NavigationDetailView(trace: selected)
+            } else {
+                PlaceholderView()
+            }
         }
-        .padding()
+        .fileImporter(
+            isPresented: $isShowingFilePicker,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            handleFileSelection(result)
+        }
+    }
+
+    fileprivate func handleFileSelection(_ result: Result<[URL], any Error>) {
+        switch result {
+        case .success(let urls):
+            if let selectedURL = urls.first {
+                try? dataHandler.importTrace(from: selectedURL)
+            }
+        case .failure(let error):
+            print("Error selecting file: \(error.localizedDescription)")
+        }
     }
 }
 
