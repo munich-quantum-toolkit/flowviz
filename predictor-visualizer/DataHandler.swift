@@ -20,7 +20,7 @@ import OSLog
         case DecodingError(String)
     }
 
-    var traces: [CompilationTracer] = []
+    var traces: [CompilationTrace] = []
     let logger: Logger = Logger(subsystem: "DataHandling", category: "DataHandler")
 
     /// Parses a JSON file from a given URL and adds it to the traces array.
@@ -40,7 +40,7 @@ import OSLog
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase
             
-            let newTrace = try decoder.decode(CompilationTracer.self, from: data)
+            let newTrace = try decoder.decode(CompilationTrace.self, from: data)
             self.traces.append(newTrace)
             logger.info("Successfully imported: \(newTrace.circuitName) from \(url.path)")
         } catch {
