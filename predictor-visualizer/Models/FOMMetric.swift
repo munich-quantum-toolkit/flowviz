@@ -1,0 +1,14 @@
+//
+//  FOMMetric.swift
+//  predictor-visualizer
+//
+//  Created by Linus Bohle on 24.04.26.
+//
+
+
+import Foundation
+
+struct FOMMetric: Codable, Hashable {
+    let value: Double
+    let kind: String
+}
