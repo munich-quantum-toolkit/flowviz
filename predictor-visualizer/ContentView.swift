@@ -19,8 +19,16 @@ struct ContentView: View {
         } detail: {
             if let selected = selectedTrace {
                 NavigationDetailView(trace: selected)
+                #if os(macOS)
+                    .toolbarBackground(.hidden, for: .windowToolbar)
+                #endif
             } else {
                 PlaceholderView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.grayBackground)
+                    #if os(macOS)
+                    .toolbarBackground(.hidden, for: .windowToolbar)
+                    #endif
             }
         }
         .fileImporter(
