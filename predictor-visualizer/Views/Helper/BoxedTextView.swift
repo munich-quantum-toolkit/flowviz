@@ -1,5 +1,5 @@
 //
-//  BoxedText.swift
+//  BoxedTextView.swift
 //  predictor-visualizer
 //
 //  Created by Linus Bohle on 04.05.26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct BoxedText: View {
+struct BoxedTextView: View {
     let text: String
     let backgroundColor: Color
     let textColor: Color
@@ -29,6 +29,6 @@ struct BoxedText: View {
 }
 
 #Preview {
-    BoxedText(text: "RZ(-0.634)")
+    BoxedTextView(text: "RZ(-0.634)")
         .padding()
 }

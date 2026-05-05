@@ -13,7 +13,7 @@ struct NavigationDetailView: View {
     var body: some View {
         ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: 24) {
-                DeviceOverview(deviceData: trace.device)
+                DeviceInformationView(deviceData: trace.device)
             }
             .padding(EdgeInsets(top: 0, leading: 24, bottom: 0, trailing: 24))
         }

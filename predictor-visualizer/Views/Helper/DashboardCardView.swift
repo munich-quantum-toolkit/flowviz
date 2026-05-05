@@ -1,5 +1,5 @@
 //
-//  DashboardCard.swift
+//  DashboardCardView.swift
 //  predictor-visualizer
 //
 //  Created by Linus Bohle on 24.04.26.
@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct DashboardCard<Content: View>: View {
+struct DashboardCardView<Content: View>: View {
     let title: String?
     let content: Content
     
@@ -46,12 +46,12 @@ struct DashboardCard<Content: View>: View {
         Color(.grayBackground).ignoresSafeArea()
 
         VStack(spacing: 24) {
-            DashboardCard(title: "Device Information") {
+            DashboardCardView(title: "Device Information") {
                 Text("ibm_falcon_127")
                     .foregroundColor(.secondary)
             }
             
-            DashboardCard {
+            DashboardCardView {
                 Text("A card without a title just for metrics.")
             }
         }

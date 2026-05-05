@@ -1,12 +1,12 @@
 //
-//  DeviceOverview.swift
+//  DeviceInformationView.swift
 //  predictor-visualizer
 //
 //  Created by Linus Bohle on 04.05.26.
 //
 import SwiftUI
 
-struct DeviceOverview: View {
+struct DeviceInformationView: View {
     let deviceData: DeviceMetadata
 
     var body: some View {
@@ -15,10 +15,10 @@ struct DeviceOverview: View {
                 .font(.title2.bold())
 
             HStack {
-                DashboardCard(title: deviceData.formattedDeviceName) {
+                DashboardCardView(title: deviceData.formattedDeviceName) {
                     FlowLayout(spacing: 8) {
                         ForEach(deviceData.nativeGates, id: \.self) { gate in
-                            BoxedText(text: gate.uppercased())
+                            BoxedTextView(text: gate.uppercased())
                         }
                     }
                 }
@@ -33,7 +33,7 @@ struct DeviceOverview: View {
 #Preview {
     ZStack {
         Color.grayBackground.ignoresSafeArea()
-        DeviceOverview(deviceData: CompilationTrace.previewMock.device)
+        DeviceInformationView(deviceData: CompilationTrace.previewMock.device)
             .padding()
     }
 }

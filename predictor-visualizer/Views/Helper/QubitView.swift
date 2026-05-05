@@ -1,5 +1,5 @@
 //
-//  Qubit.swift
+//  QubitView.swift
 //  predictor-visualizer
 //
 //  Created by Linus Bohle on 04.05.26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct Qubit: View {
+struct QubitView: View {
     let qubitNumber: String
 
     var body: some View {
@@ -21,6 +21,6 @@ struct Qubit: View {
 }
 
 #Preview {
-    Qubit(qubitNumber: "00")
+    QubitView(qubitNumber: "00")
         .padding()
 }
