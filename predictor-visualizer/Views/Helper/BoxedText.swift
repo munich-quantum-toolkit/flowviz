@@ -8,18 +8,18 @@
 import SwiftUI
 
 struct BoxedText: View {
-    let gateText: String
+    let text: String
     let backgroundColor: Color
     let textColor: Color
 
-    init(gateText: String, backgroundColor: Color = Color.blueBackground, textColor: Color = Color.bluePrimary) {
-        self.gateText = gateText
+    init(text: String, backgroundColor: Color = Color.blueBackground, textColor: Color = Color.bluePrimary) {
+        self.text = text
         self.backgroundColor = backgroundColor
         self.textColor = textColor
     }
 
     var body: some View {
-        Text(gateText)
+        Text(text)
             .font(.system(size: 13, weight: .semibold))
             .foregroundStyle(Color.bluePrimary)
             .padding(8)
@@ -29,6 +29,6 @@ struct BoxedText: View {
 }
 
 #Preview {
-    BoxedText(gateText: "RZ(-0.634)")
+    BoxedText(text: "RZ(-0.634)")
         .padding()
 }

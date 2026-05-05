@@ -17,7 +17,7 @@ struct DeviceOverview: View {
             DashboardCard(title: deviceData.formattedDeviceName) {
                 FlowLayout(spacing: 8) {
                     ForEach(deviceData.nativeGates, id: \.self) { gate in
-                        BoxedText(gateText: gate)
+                        BoxedText(text: gate.uppercased())
                     }
                 }
             }
