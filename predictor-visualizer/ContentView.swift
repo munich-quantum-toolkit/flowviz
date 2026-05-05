@@ -19,8 +19,11 @@ struct ContentView: View {
         } detail: {
             if let selected = selectedTrace {
                 NavigationDetailView(trace: selected)
+                    .background(Color.grayBackground)
                 #if os(macOS)
                     .toolbarBackground(.hidden, for: .windowToolbar)
+                #elseif os(iOS)
+                    .toolbarVisibility(.hidden, for: .navigationBar)
                 #endif
             } else {
                 PlaceholderView()

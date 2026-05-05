@@ -20,7 +20,7 @@ struct BoxedText: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 13, weight: .semibold))
+            .font(.caption.bold())
             .foregroundStyle(Color.bluePrimary)
             .padding(8)
             .background(Color.blueBackground)

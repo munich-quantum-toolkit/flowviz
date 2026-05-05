@@ -11,11 +11,19 @@ struct NavigationDetailView: View {
     let trace: CompilationTrace
 
     var body: some View {
-        Text("You selected: \(trace.circuitName)")
-            .font(.largeTitle)
+        ScrollView(.vertical, showsIndicators: true) {
+            VStack(alignment: .leading, spacing: 24) {
+                DeviceOverview(deviceData: trace.device)
+            }
+            .padding(EdgeInsets(top: 0, leading: 24, bottom: 0, trailing: 24))
+        }
+        .clipped()
     }
 }
 
 #Preview {
-    NavigationDetailView(trace: CompilationTrace.previewMock)
+    ZStack {
+        Color.grayBackground.ignoresSafeArea()
+        NavigationDetailView(trace: CompilationTrace.previewMock)
+    }
 }
