@@ -36,12 +36,8 @@ struct GraphBoxView: View {
                         x: .value("Step", dataPoint.step),
                         y: .value("Value", dataPoint.value)
                     )
-                    .symbol {
-                        Circle()
-                            .fill(selectedStep == dataPoint.step ? chartColor : Color.white)
-                            .strokeBorder(chartColor, lineWidth: 2)
-                            .frame(width: 12, height: 12)
-                    }
+                    .symbolSize(70)
+                    .foregroundStyle(chartColor)
                     .annotation(
                         position: .top,
                         spacing: 8,
@@ -79,7 +75,7 @@ struct GraphBoxView: View {
                 AxisMarks(preset: .aligned, values: .stride(by: 1))
             })
             .chartScrollableAxes(.horizontal)
-            .chartXVisibleDomain(length: 10)
+            .chartXVisibleDomain(length: 8)
             .chartXScale(range: .plotDimension(startPadding: 6, endPadding: 24))
             .chartYScale(range: .plotDimension(padding: 12))
             .chartXSelection(value: $selectedStep)
@@ -113,7 +109,7 @@ struct GraphBoxView: View {
             title: "Parallelism",
             chartData: mockData,
             chartColor: Color.redPrimary,
-            selectedStep: $selectedStep
+            selectedStep: $selectedStep,
         )
         .frame(width: 400, height: 400)
         .padding()

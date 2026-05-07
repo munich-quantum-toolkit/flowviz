@@ -14,8 +14,9 @@ struct NavigationDetailView: View {
         ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: 24) {
                 DeviceInformationView(deviceData: trace.device)
+                CompilationInformationView(trace: trace)
             }
-            .padding(EdgeInsets(top: 0, leading: 24, bottom: 0, trailing: 24))
+            .padding(EdgeInsets(top: 0, leading: 24, bottom: 24, trailing: 24))
         }
         .clipped()
     }
