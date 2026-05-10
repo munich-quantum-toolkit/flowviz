@@ -19,7 +19,7 @@ struct ListItemView: View {
             VStack(alignment: .leading) {
                 Text(trace.circuitName)
                     .font(.headline)
-                Text(trace.device.description + ", " + trace.device.deviceQubits.description + " qubits")
+                Text(trace.device.formattedDeviceName + ", " + trace.device.deviceQubits.description + " qubits")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
