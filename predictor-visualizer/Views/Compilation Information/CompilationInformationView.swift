@@ -17,6 +17,7 @@ struct CompilationInformationView: View {
     @State private var qubitsData: [ChartDataPoint] = []
     @State private var rewardData: [ChartDataPoint] = []
     @State private var depthData: [ChartDataPoint] = []
+    @State private var figureOfMeritSeries: [ChartDataSet] = []
 
     let gridLayout = [
         GridItem(.flexible(), spacing: 16),
@@ -78,14 +79,92 @@ struct CompilationInformationView: View {
                 )
                 .aspectRatio(1, contentMode: .fit)
             }
+
+            GraphBoxView(
+                title: "Figures of Merit",
+                seriesData: figureOfMeritSeries,
+                selectedStep: $selectedStep
+            )
+            .aspectRatio(3.1, contentMode: .fit)
         }
         .task(id: trace.id) {
-            parallelismData = trace.steps.map { ChartDataPoint(step: $0.stepIndex, value: Float($0.parallelism)) }
-            entanglementData = trace.steps.map { ChartDataPoint(step: $0.stepIndex, value: Float($0.entanglementRatio)) }
-            livenessData = trace.steps.map { ChartDataPoint(step: $0.stepIndex, value: Float($0.liveness)) }
-            qubitsData = trace.steps.map { ChartDataPoint(step: $0.stepIndex, value: Float($0.numQubits)) }
-            rewardData = trace.steps.map { ChartDataPoint(step: $0.stepIndex, value: Float($0.reward)) }
-            depthData = trace.steps.map { ChartDataPoint(step: $0.stepIndex, value: Float($0.rawCriticalDepth)) }
+            var tempParallelism: [ChartDataPoint] = []
+            var tempEntanglement: [ChartDataPoint] = []
+            var tempLiveness: [ChartDataPoint] = []
+            var tempQubits: [ChartDataPoint] = []
+            var tempReward: [ChartDataPoint] = []
+            var tempDepth: [ChartDataPoint] = []
+            var tempExpectedFidelity: [ChartDataPoint] = []
+            var tempCriticalDepth: [ChartDataPoint] = []
+            var tempHellingerDistance: [ChartDataPoint?] = []
+            var tempEstimatedSuccessProbability: [ChartDataPoint?] = []
+
+            let count = trace.steps.count
+            tempParallelism.reserveCapacity(count)
+            tempEntanglement.reserveCapacity(count)
+            tempLiveness.reserveCapacity(count)
+            tempQubits.reserveCapacity(count)
+            tempReward.reserveCapacity(count)
+            tempDepth.reserveCapacity(count)
+            tempExpectedFidelity.reserveCapacity(count)
+            tempCriticalDepth.reserveCapacity(count)
+            tempHellingerDistance.reserveCapacity(count)
+            tempEstimatedSuccessProbability.reserveCapacity(count)
+
+            for step in trace.steps {
+                let index = step.stepIndex
+
+                tempParallelism.append(ChartDataPoint(step: index, value: Float(step.parallelism)))
+                tempEntanglement.append(ChartDataPoint(step: index, value: Float(step.entanglementRatio)))
+                tempLiveness.append(ChartDataPoint(step: index, value: Float(step.liveness)))
+                tempQubits.append(ChartDataPoint(step: index, value: Float(step.numQubits)))
+                tempReward.append(ChartDataPoint(step: index, value: Float(step.reward)))
+                tempDepth.append(ChartDataPoint(step: index, value: Float(step.rawCriticalDepth)))
+
+                let fidelity = step.figuresOfMerit.expectedFidelity
+                tempExpectedFidelity.append(ChartDataPoint(step: index, value: Float(fidelity.value), tentative: fidelity.tentative))
+
+                let criticalDepth = step.figuresOfMerit.criticalDepth
+                tempCriticalDepth.append(ChartDataPoint(step: index, value: Float(criticalDepth.value), tentative: criticalDepth.tentative))
+
+                if let hellingerDistance = step.figuresOfMerit.hellingerDistance {
+                    tempHellingerDistance.append(ChartDataPoint(step: index, value: Float(hellingerDistance.value), tentative: hellingerDistance.tentative))
+                } else {
+                    tempHellingerDistance.append(nil)
+                }
+
+                if let esp = step.figuresOfMerit.successProbability {
+                    tempHellingerDistance.append(ChartDataPoint(step: index, value: Float(esp.value), tentative: esp.tentative))
+                } else {
+                    tempHellingerDistance.append(nil)
+                }
+            }
+
+            parallelismData = tempParallelism
+            entanglementData = tempEntanglement
+            livenessData = tempLiveness
+            qubitsData = tempQubits
+            rewardData = tempReward
+            depthData = tempDepth
+
+            var tempFOMSeries = [
+                ChartDataSet(name: "Expected Fidelity", color: Color.bluePrimary, data: tempExpectedFidelity),
+                ChartDataSet(name: "Critical Depth", color: Color.redPrimary, data: tempCriticalDepth),
+            ]
+
+            // Ensure Hellinger & ESP are only displayed when the data is actually available
+            let filteredHellinger = tempHellingerDistance.compactMap(\.self)
+            let filteredESP = tempEstimatedSuccessProbability.compactMap(\.self)
+
+            if filteredHellinger.count == count {
+                tempFOMSeries.append(ChartDataSet(name: "Hellinger Distance", color: Color.yellowPrimary, data: tempHellingerDistance.compactMap(\.self)))
+            }
+
+            if filteredESP.count == count {
+                tempFOMSeries.append(ChartDataSet(name: "Estimated Success Probability", color: Color.greenPrimary, data: tempEstimatedSuccessProbability.compactMap(\.self)))
+            }
+
+            figureOfMeritSeries = tempFOMSeries
         }
     }
 }

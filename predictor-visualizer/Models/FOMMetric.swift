@@ -11,4 +11,8 @@ import Foundation
 struct FOMMetric: Codable, Hashable {
     let value: Double
     let kind: String
+
+    var tentative: Bool {
+        return kind == "approx"
+    }
 }
