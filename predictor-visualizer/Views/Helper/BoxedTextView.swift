@@ -21,9 +21,9 @@ struct BoxedTextView: View {
     var body: some View {
         Text(text)
             .font(.caption.bold())
-            .foregroundStyle(Color.bluePrimary)
+            .foregroundStyle(textColor)
             .padding(8)
-            .background(Color.blueBackground)
+            .background(backgroundColor)
             .cornerRadius(8)
     }
 }
