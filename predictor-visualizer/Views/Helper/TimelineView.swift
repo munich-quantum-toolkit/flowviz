@@ -7,9 +7,12 @@ struct TimelineView: View {
     let rowSpacing: CGFloat = 20
     let innerPillHeight: CGFloat = 32
 
-    var totalSteps: Int {
-        let absoluteMax = sequences.compactMap { $0.maxStep }.max() ?? -1
-        return absoluteMax + 1
+    var startingStep: Int {
+        sequences.compactMap { $0.minStep }.min() ?? 0
+    }
+
+    var endingStep: Int {
+        sequences.compactMap { $0.maxStep }.max() ?? 0
     }
 
     func activeRow(for step: Int) -> Int {
@@ -52,7 +55,7 @@ struct TimelineView: View {
                 // --- RIGHT COLUMN (SCROLLABLE) ---
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 0) {
-                        ForEach(0..<totalSteps, id: \.self) { step in
+                        ForEach(startingStep...endingStep, id: \.self) { step in
                             // The colored BoxedTextView
                             StepColumn(
                                 step: step,
@@ -63,7 +66,7 @@ struct TimelineView: View {
                             )
 
                             // The connecting dashed lines
-                            if step < totalSteps - 1 {
+                            if step < endingStep {
                                 StepSeparator(
                                     currentStep: step,
                                     nextStep: step + 1,
