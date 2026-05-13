@@ -26,7 +26,8 @@ struct TimelineView: View {
                         // The first gap gets the initial top-offset.
                         // Every subsequent gap is pushed down by exactly one full row height + spacing.
                         Color.clear.frame(height: index == 0 ? (rowHeight + (rowSpacing / 2)) : (rowHeight + rowSpacing))
-                        Divider().background(Color.gray.opacity(0.3))
+                        Divider()
+                            .background(Color.gray.opacity(0.1))
                     }
                 }
             }
@@ -46,12 +47,13 @@ struct TimelineView: View {
                         .frame(height: rowHeight)
                     }
                 }
+                .fixedSize(horizontal: true, vertical: false)
 
                 // --- RIGHT COLUMN (SCROLLABLE) ---
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 0) {
                         ForEach(0..<totalSteps, id: \.self) { step in
-                            // The colored bubble
+                            // The colored BoxedTextView
                             StepColumn(
                                 step: step,
                                 sequences: sequences,
@@ -90,19 +92,27 @@ struct StepColumn: View {
 
     var body: some View {
         VStack(spacing: rowSpacing) {
-            // Loop through every single phase (row) from top to bottom
             ForEach(sequences) { phase in
-                // Check if this specific phase contains our current step
                 let isActive = phase.contains(step: step)
 
                 if isActive {
                     BoxedTextView(text: "\(step)", backgroundColor: phase.backgroundColor, textColor: phase.textColor)
-                        // enforce strict row height for grid alignment
+                        .frame(width: 36, height: pillHeight) // Ensure consistent width
                         .frame(height: rowHeight)
                 } else {
-                    // Use invisible spacer to prevent the column from collapsing
-                    Color.clear
-                        .frame(height: rowHeight)
+                    if let min = phase.minStep, let max = phase.maxStep, step >= min && step <= max {
+                        Line()
+                            .stroke(style: StrokeStyle(lineWidth: 2, dash: [4, 6], dashPhase: 4))
+                            .foregroundColor(phase.textColor.opacity(0.5))
+                            .frame(width: 36, height: 2) // Explicit width prevents collapsing
+                            .frame(height: rowHeight)
+                    } else {
+                        Line()
+                            .stroke(style: StrokeStyle(lineWidth: 2, dash: [4, 6], dashPhase: 4))
+                            .foregroundColor(Color.gray.opacity(0.3))
+                            .frame(width: 36, height: 2)
+                            .frame(height: rowHeight)
+                    }
                 }
             }
         }
@@ -118,22 +128,19 @@ struct StepSeparator: View {
 
     var body: some View {
         VStack(spacing: rowSpacing) {
-            // Loop through every single phase (row)
             ForEach(sequences) { phase in
-                // Check if BOTH adjacent steps are active in this specific phase
-                let currentActive = phase.contains(step: currentStep)
-                let nextActive = phase.contains(step: nextStep)
 
-                if currentActive && nextActive {
-                    // Draw the connecting dashed line
+                if let min = phase.minStep, let max = phase.maxStep, currentStep >= min && nextStep <= max {
                     Line()
-                        .stroke(style: StrokeStyle(lineWidth: 2, dash: [5, 5]))
+                        .stroke(style: StrokeStyle(lineWidth: 2, dash: [4, 6], dashPhase: 0))
                         .foregroundColor(phase.textColor.opacity(0.5))
                         .frame(height: 2)
                         .frame(height: rowHeight)
                 } else {
-                    // Again use invisible spacer
-                    Color.clear
+                    Line()
+                        .stroke(style: StrokeStyle(lineWidth: 2, dash: [4, 6], dashPhase: 0))
+                        .foregroundColor(Color.gray.opacity(0.3))
+                        .frame(height: 2)
                         .frame(height: rowHeight)
                 }
             }
@@ -152,6 +159,7 @@ struct StateBadge: View {
     var body: some View {
         HStack {
             BoxedTextView(text: title, backgroundColor: color, textColor: textColor)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(count)
                 .font(.caption.bold())
@@ -179,19 +187,13 @@ struct Line: Shape {
             textColor: .red
         ),
         TimelineSequence(
-            title: "✓ Synthesized ✕ Mapped",
+            title: "✓ Synthesized",
             stepRanges: [3...11, 19...20],
             backgroundColor: Color.yellow.opacity(0.3),
             textColor: .orange
         ),
         TimelineSequence(
-            title: "✓ Synthesized ✓ Mapped",
-            stepRanges: [12...15, 21...25],
-            backgroundColor: Color.green.opacity(0.2),
-            textColor: .green
-        ),
-        TimelineSequence(
-            title: "✓ Synthesized ✓ Mapped",
+            title: "✓ Mapped",
             stepRanges: [12...15, 21...25],
             backgroundColor: Color.green.opacity(0.2),
             textColor: .green
