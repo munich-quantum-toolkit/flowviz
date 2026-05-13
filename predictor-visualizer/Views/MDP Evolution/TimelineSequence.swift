@@ -22,13 +22,18 @@ struct TimelineSequence: Identifiable {
         return "\(totalSteps)x"
     }
 
-    /// Helper function to check if a specific step exists in any of this phase's ranges.
+    /// Helper function to check if a specific step exists in any of this timeline's ranges.
     func contains(step: Int) -> Bool {
         stepRanges.contains { $0.contains(step) }
     }
 
-    /// Helper to find the absolute highest step number in this phase.
+    /// Helper to find the absolute highest step number in this timeline.
     var maxStep: Int? {
         stepRanges.map { $0.upperBound }.max()
+    }
+
+    /// Helper to find the absolute lowest step number in this timeline.
+    var minStep: Int? {
+        stepRanges.map { $0.lowerBound }.min()
     }
 }
