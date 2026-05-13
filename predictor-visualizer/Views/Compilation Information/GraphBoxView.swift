@@ -11,17 +11,16 @@ import Charts
 struct GraphBoxView: View {
     let title: String
     let seriesData: [ChartDataSet]
-    @Binding var selectedStep: Int?
+    @State var selectedStep: Int?
 
     let chartDomain: [String]
     let chartColorRange: [Color]
     let chartMaxValue: Float
     let chartMinValue: Float
 
-    init(title: String, seriesData: [ChartDataSet], selectedStep: Binding<Int?> = .constant(nil)) {
+    init(title: String, seriesData: [ChartDataSet]) {
         self.title = title
         self.seriesData = seriesData
-        self._selectedStep = selectedStep
 
         self.chartDomain = seriesData.map { $0.name }
         self.chartColorRange = seriesData.map { $0.color }
@@ -29,10 +28,10 @@ struct GraphBoxView: View {
         self.chartMinValue = seriesData.flatMap { $0.data }.map { $0.value }.min() ?? 0.0
     }
 
-    init(title: String, chartData: [ChartDataPoint], chartColor: Color, selectedStep: Binding<Int?> = .constant(nil)) {
+    init(title: String, chartData: [ChartDataPoint], chartColor: Color) {
         // Note: This initializer is just for plotting a single dataset. The chart will not display a legend, which is why
         // the name value passed to the initializer of ChartDataSet does not have any effect.
-        self.init(title: title, seriesData: [ChartDataSet(name: title, color: chartColor, data: chartData)], selectedStep: selectedStep)
+        self.init(title: title, seriesData: [ChartDataSet(name: title, color: chartColor, data: chartData)])
     }
 
     var body: some View {
@@ -183,8 +182,7 @@ struct GraphBoxView: View {
             seriesData: [
                 ChartDataSet(name: "SABRE", color: .red, data: mockData1),
                 ChartDataSet(name: "Qiskit", color: .blue, data: mockData2)
-            ],
-            selectedStep: $selectedStep
+            ]
         )
         .frame(width: 400, height: 400)
         .padding()

@@ -35,7 +35,7 @@ struct CompilationInformationView: View {
                     title: "Parallelism",
                     chartData: parallelismData,
                     chartColor: Color.bluePrimary,
-                    selectedStep: $selectedStep
+
                 )
                 .aspectRatio(1, contentMode: .fit)
 
@@ -43,7 +43,7 @@ struct CompilationInformationView: View {
                     title: "Entanglement Ratio",
                     chartData: entanglementData,
                     chartColor: Color.bluePrimary,
-                    selectedStep: $selectedStep
+
                 )
                 .aspectRatio(1, contentMode: .fit)
 
@@ -51,7 +51,7 @@ struct CompilationInformationView: View {
                     title: "Liveness",
                     chartData: livenessData,
                     chartColor: Color.bluePrimary,
-                    selectedStep: $selectedStep
+
                 )
                 .aspectRatio(1, contentMode: .fit)
 
@@ -59,7 +59,7 @@ struct CompilationInformationView: View {
                     title: "Used Qubits",
                     chartData: qubitsData,
                     chartColor: Color.bluePrimary,
-                    selectedStep: $selectedStep
+
                 )
                 .aspectRatio(1, contentMode: .fit)
 
@@ -67,7 +67,7 @@ struct CompilationInformationView: View {
                     title: "RL Reward",
                     chartData: rewardData,
                     chartColor: Color.bluePrimary,
-                    selectedStep: $selectedStep
+
                 )
                 .aspectRatio(1, contentMode: .fit)
 
@@ -75,7 +75,7 @@ struct CompilationInformationView: View {
                     title: "Critical Depth",
                     chartData: depthData,
                     chartColor: Color.bluePrimary,
-                    selectedStep: $selectedStep
+
                 )
                 .aspectRatio(1, contentMode: .fit)
             }
@@ -83,7 +83,6 @@ struct CompilationInformationView: View {
             GraphBoxView(
                 title: "Figures of Merit",
                 seriesData: figureOfMeritSeries,
-                selectedStep: $selectedStep
             )
             .aspectRatio(3.1, contentMode: .fit)
         }
