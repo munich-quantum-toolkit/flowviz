@@ -1,3 +1,9 @@
+//
+//  TimelineView.swift
+//  predictor-visualizer
+//
+//  Created by Linus Bohle on 12.05.26.
+//
 import SwiftUI
 
 struct TimelineView: View {
@@ -22,16 +28,19 @@ struct TimelineView: View {
     var body: some View {
         ZStack(alignment: .top) {
             // --- BACKGROUND: Horizontal Grey Separators ---
-            VStack(spacing: 0) {
-                // Only draw separators if we have more than 1 phase
-                if sequences.count > 1 {
-                    ForEach(0..<sequences.count - 1, id: \.self) { index in
-                        // The first gap gets the initial top-offset.
-                        // Every subsequent gap is pushed down by exactly one full row height + spacing.
-                        Color.clear.frame(height: index == 0 ? (rowHeight + (rowSpacing / 2)) : (rowHeight + rowSpacing))
-                        Divider()
-                            .background(Color.gray.opacity(0.1))
-                    }
+            VStack(spacing: rowSpacing) {
+                ForEach(0..<sequences.count, id: \.self) { index in
+                    // Create an invisible block that identically matches the foreground row height and place the divider as overlay
+                    Color.clear
+                        .frame(height: rowHeight)
+                        .overlay(alignment: .bottom) {
+                            if index < sequences.count - 1 {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.2))
+                                    .frame(height: 1)
+                                    .offset(y: (rowSpacing / 2) + 0.5)
+                            }
+                        }
                 }
             }
 
