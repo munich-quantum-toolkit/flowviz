@@ -33,7 +33,7 @@ struct CompilationPipelineView: View {
                             expandedPipeline.toggle()
                         }
                     }) {
-                        Text(expandedPipeline ? "Show less 􀄨" : "Show all (\(timelines.count - collapsedCount) more) 􀄩")
+                        Text(expandedPipeline ? "Show less \(Image(systemName: "arrow.up"))" : "Show all (\(timelines.count - collapsedCount) more) \(Image(systemName: "arrow.down"))")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(Color.bluePrimary)
                     }
