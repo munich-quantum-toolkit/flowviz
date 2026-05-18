@@ -19,6 +19,35 @@ struct CompilationTrace: Codable, Hashable, Identifiable {
     let timestamp: Double
     let steps: [CompilationStep]
     
+    /// Collects the actions that were applied throughout the compilation.
+    /// - Returns: An array of ``TimelineSequence`` values.
+    func getActionEvolution() -> [TimelineSequence] {
+        guard !steps.isEmpty else { return [] }
+
+        let sortedSteps = steps.sorted { $0.stepIndex < $1.stepIndex }
+
+        var orderedActions: [String] = []
+        var seenActions: Set<String> = []
+
+        for step in sortedSteps {
+            if !seenActions.contains(step.action) {
+                seenActions.insert(step.action)
+                orderedActions.append(step.action)
+            }
+        }
+
+        return orderedActions.enumerated().map { index, actionName in
+            let actionRanges = extractRanges(where: { $0.action == actionName }, in: sortedSteps)
+
+            return TimelineSequence(
+                title: actionName,
+                stepRanges: actionRanges,
+                backgroundColor: Color.blueBackground,
+                textColor: Color.bluePrimary
+            )
+        }
+    }
+
     /// Collects the MDP state evolution of the compilation trace.
     /// - Returns: A tuple containing the individual MDP states and the corresponding ranges.
     func getMDPStateEvolution() -> (synthesizedRanges: [ClosedRange<Int>], laidOutRanges: [ClosedRange<Int>], routedRanges: [ClosedRange<Int>]) {

@@ -15,6 +15,7 @@ struct NavigationDetailView: View {
             VStack(alignment: .leading, spacing: 24) {
                 DeviceInformationView(deviceData: trace.device)
                 CompilationInformationView(trace: trace)
+                CompilationPipelineView(trace: trace)
                 MDPEvolutionView(trace: trace)
             }
             .padding(EdgeInsets(top: 0, leading: 24, bottom: 24, trailing: 24))
