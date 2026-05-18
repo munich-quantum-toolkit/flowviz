@@ -13,16 +13,13 @@ struct TimelineView: View {
     let rowSpacing: CGFloat = 20
     let innerPillHeight: CGFloat = 32
 
-    var startingStep: Int {
-        sequences.compactMap { $0.minStep }.min() ?? 0
-    }
+    let startingStep: Int
+    let endingStep: Int
 
-    var endingStep: Int {
-        sequences.compactMap { $0.maxStep }.max() ?? 0
-    }
-
-    func activeRow(for step: Int) -> Int {
-        return sequences.firstIndex(where: { $0.contains(step: step) }) ?? 0
+    init(sequences: [TimelineSequence]) {
+        self.sequences = sequences
+        self.startingStep = sequences.compactMap { $0.minStep }.min() ?? 0
+        self.endingStep = sequences.compactMap { $0.maxStep }.max() ?? 0
     }
 
     var body: some View {
@@ -60,10 +57,11 @@ struct TimelineView: View {
                     }
                 }
                 .fixedSize(horizontal: true, vertical: false)
+                .drawingGroup()
 
                 // --- RIGHT COLUMN (SCROLLABLE) ---
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 0) {
+                    LazyHStack(spacing: 0) {
                         ForEach(startingStep...endingStep, id: \.self) { step in
                             // The colored BoxedTextView
                             StepColumn(
@@ -213,6 +211,7 @@ struct Line: Shape {
     ]
 
     ZStack {
+        // NOTE: LazyHStack causes issues in the preview, but works fine in the simulator! Temporarily replace LazyHStack in Line 64 with HStack if you're developing using only the preview here.
         Color(white: 0.96).ignoresSafeArea()
         TimelineView(sequences: mockSequences)
             .padding()
