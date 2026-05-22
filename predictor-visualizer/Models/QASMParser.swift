@@ -70,6 +70,7 @@ final class QASMParser {
                     let moment = currentMomentPerWire[qBit] ?? 0
                     operations.append(CircuitOperation(type: .measurement(qubit: qBit, classicalBit: cBit), momentIndex: moment))
                     currentMomentPerWire[qBit] = moment + 1
+                    continue
                 }
                 logger.warning("[MEASURE] - Could not parse suspected measurement instruction: \(line)")
                 continue
@@ -89,7 +90,7 @@ final class QASMParser {
                 continue
             }
 
-            // 4. Logic Gates (e.g. `cx q[0], q[1];` or `rz(-pi/2) q[4];`)
+            // 6) Handle Logic Gates (e.g. `cx q[0], q[1];` or `rz(-pi/2) q[4];`)
             // Split the gate identifier from the affected qubit(s)
             let cleanLine = line.replacingOccurrences(of: ";", with: "")
             let parts = cleanLine.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
@@ -139,6 +140,7 @@ final class QASMParser {
             }
         }
 
+        logger.info("Finished parsing of string \(qasm).")
         return ParsedCircuit(wires: wires, operations: operations)
     }
 
