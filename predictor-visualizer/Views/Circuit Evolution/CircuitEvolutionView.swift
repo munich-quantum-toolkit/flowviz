@@ -122,9 +122,6 @@ struct CircuitEvolutionView: View {
             }
         }
         .contentShape(Rectangle())
-        .onTapGesture {
-            isFocused = false
-        }
     }
 
     /// Helper method that validates and applies the provided step input from the user.

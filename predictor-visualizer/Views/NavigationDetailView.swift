@@ -21,7 +21,8 @@ struct NavigationDetailView: View {
             }
             .padding(EdgeInsets(top: 0, leading: 24, bottom: 24, trailing: 24))
         }
-        .clipped()
+        .scrollDismissesKeyboard(.interactively)
+        .hideKeyboardOnTap()
     }
 }
 
