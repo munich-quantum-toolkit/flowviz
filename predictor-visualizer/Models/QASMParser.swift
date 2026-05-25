@@ -108,7 +108,10 @@ final class QASMParser {
 
             if let paramStart = gateIdentifier.firstIndex(of: "("), let paramEnd = gateIdentifier.lastIndex(of: ")") {
                 let start = gateIdentifier.index(after: paramStart)
-                parameter = String(gateIdentifier[start..<paramEnd])
+                let rawParameter = String(gateIdentifier[start..<paramEnd])
+                // Run the extracted parameter through the formatter before saving it
+                // We don't want full precision float numbers after all
+                parameter = formatParameter(rawParameter)
             }
 
             let involvedQubits = extractAllIntegers(from: qubitsPart)
@@ -167,7 +170,35 @@ final class QASMParser {
             return []
         }
     }
-    
+
+    /// Searches a parameter string for floating-point numbers and formats them to 3 decimal places.
+    /// 
+    /// Leaves non-numeric characters (like 'pi') untouched.
+    /// - Parameter parameter: The label of a quantum gate.
+    /// - Returns: The formatted label.
+    private static func formatParameter(_ gateLabel: String) -> String {
+        do {
+            // Matches optional +/- followed by optional digits, a dot, and 1 or more digits (e.g., -4.578679)
+            let regex = try NSRegularExpression(pattern: "[-+]?\\d*\\.\\d+")
+            let nsString = gateLabel as NSString
+            let results = regex.matches(in: gateLabel, range: NSRange(location: 0, length: nsString.length))
+
+            var formattedString = gateLabel
+
+            // Iterate in reverse so modifying the string doesn't shift the index ranges of earlier matches
+            for result in results.reversed() {
+                let matchString = nsString.substring(with: result.range)
+                if let value = Double(matchString) {
+                    let formattedValue = String(format: "%.3f", value)
+                    formattedString = (formattedString as NSString).replacingCharacters(in: result.range, with: formattedValue)
+                }
+            }
+            return formattedString
+        } catch {
+            return gateLabel
+        }
+    }
+
     /// Matches a given regex pattern against a provided string.
     /// - Parameters:
     ///   - pattern: The regex pattern to check for.
