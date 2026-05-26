@@ -12,6 +12,8 @@ struct CanvasRenderView: View {
     let rowHeight: CGFloat
     let columnWidth: CGFloat
 
+    let edgeBuffer: CGFloat = 12
+
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
             // --- LEFT COLUMN: Fixed Qubit Labels ---
@@ -26,11 +28,12 @@ struct CanvasRenderView: View {
 
             // --- RIGHT COLUMN: Scrollable Canvas ---
             ScrollView(.horizontal, showsIndicators: true) {
-                let calculatedWidth = CGFloat(max(currentCircuit.totalMoments, 1)) * columnWidth
+
+                let calculatedWidth = (CGFloat(max(currentCircuit.totalMoments, 1)) * columnWidth) + (edgeBuffer * 2)
                 let canvasHeight = CGFloat(currentCircuit.wires.count) * rowHeight
 
                 Canvas { context, size in
-                    // 1. Draw horizontal wires
+                    // Draw horizontal wires
                     for i in 0..<currentCircuit.wires.count {
                         let yPosition = CGFloat(i) * rowHeight + (rowHeight / 2)
 
@@ -41,9 +44,9 @@ struct CanvasRenderView: View {
                         context.stroke(path, with: .color(.gray.opacity(0.2)), lineWidth: 2)
                     }
 
-                    // 2. Draw Operations
+                    // Draw Operations
                     for op in currentCircuit.operations {
-                        let xCenter = CGFloat(op.momentIndex) * columnWidth + (columnWidth / 2)
+                        let xCenter = edgeBuffer + (CGFloat(op.momentIndex) * columnWidth) + (columnWidth / 2)
 
                         switch op.type {
                         case .singleQubit(let target, _, _), .measurement(let target, _):
