@@ -21,23 +21,16 @@ final class QASMParser {
      */
 
     static func parse(qasm: String) -> ParsedCircuit {
-        var wires: [Wire] = []
         var operations: [CircuitOperation] = []
-
-        // Keeps track of the next available moment (column) for each wire
         var currentMomentPerWire: [Int: Int] = [:]
 
         let lines = qasm.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }
         var isInsideGateDefinition = false
 
+        // MARK: - General Parsing
         for line in lines {
-            // 1) Skip custom gate definition blocks (we only want to draw applied gates)
-            // Handle single-line definitions
-            if line.hasPrefix("gate ") && line.contains("{") && line.contains("}") {
-                continue // throw the line away
-            }
-
-            // Handle multi-line definitions (should not occur, but still)
+            // 1) Skip custom gate definition blocks
+            if line.hasPrefix("gate ") && line.contains("{") && line.contains("}") { continue }
             if line.hasPrefix("gate ") && line.contains("{") && !line.contains("}") {
                 isInsideGateDefinition = true
                 continue
@@ -48,20 +41,10 @@ final class QASMParser {
             }
             if isInsideGateDefinition { continue }
 
-            // 2) Skip comments and headers
-            guard !line.isEmpty, !line.hasPrefix("//"), !line.hasPrefix("OPENQASM"), !line.hasPrefix("include") else { continue }
+            // 2) Skip comments, headers, and Qubit Declarations!
+            guard !line.isEmpty, !line.hasPrefix("//"), !line.hasPrefix("OPENQASM"), !line.hasPrefix("include"), !line.hasPrefix("qubit["), !line.hasPrefix("qreg ") else { continue }
 
-            // 3) Qubit Declaration & Wire allocation (handles QASM 2 `qreg` and QASM 3 `qubit[]`)
-            if line.hasPrefix("qubit[") || line.hasPrefix("qreg ") {
-                let count = extractFirstInteger(from: line) ?? 0
-                if wires.isEmpty {
-                    wires = (0..<count).map { Wire(id: $0, label: "q[\($0)]") }
-                    for i in 0..<count { currentMomentPerWire[i] = 0 }
-                }
-                continue
-            }
-
-            // 4) Handle Measurement Operations
+            // 3) Handle Measurement Operations
             if line.contains("measure") {
                 if let qMatch = match(pattern: "q\\[(\\d+)\\]", in: line),
                    let cMatch = match(pattern: "(?:c|meas)\\[(\\d+)\\]", in: line),
@@ -76,21 +59,20 @@ final class QASMParser {
                 continue
             }
 
-            // 5) Handle Barrier Operations
+            // 4) Handle Barrier Operations
             if line.hasPrefix("barrier") {
                 let qubits = extractAllIntegers(from: line)
                 if !qubits.isEmpty {
-                    // Find the most advanced moment among all involved qubits
                     let maxMoment = qubits.compactMap { currentMomentPerWire[$0] }.max() ?? 0
                     operations.append(CircuitOperation(type: .barrier(qubits: qubits), momentIndex: maxMoment))
 
-                    // Lock all involved wires to the same timeline position
+                    // Push all involved wires to the same timeline position
                     for q in qubits { currentMomentPerWire[q] = maxMoment + 1 }
                 }
                 continue
             }
 
-            // 6) Handle Logic Gates (e.g. `cx q[0], q[1];` or `rz(-pi/2) q[4];`)
+            // 5) Handle Logic Gates (e.g. `cx q[0], q[1];` or `rz(-pi/2) q[4];`)
             // Split the gate identifier from the affected qubit(s)
             let cleanLine = line.replacingOccurrences(of: ";", with: "")
             let parts = cleanLine.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
@@ -121,30 +103,67 @@ final class QASMParser {
             let moment = involvedQubits.compactMap { currentMomentPerWire[$0] }.max() ?? 0
 
             if involvedQubits.count == 1 {
-                operations.append(CircuitOperation(
-                    type: .singleQubit(target: involvedQubits[0], label: gateName, parameter: parameter),
-                    momentIndex: moment
-                ))
+                operations.append(CircuitOperation(type: .singleQubit(target: involvedQubits[0], label: gateName, parameter: parameter), momentIndex: moment))
             } else if involvedQubits.count == 2 {
-                operations.append(CircuitOperation(
-                    type: .multiQubit(control: involvedQubits[0], target: involvedQubits[1], label: gateName),
-                    momentIndex: moment
-                ))
+                operations.append(CircuitOperation(type: .multiQubit(control: involvedQubits[0], target: involvedQubits[1], label: gateName), momentIndex: moment))
             } else {
-                operations.append(CircuitOperation(
-                    type: .nQubit(qubits: involvedQubits, label: gateName),
-                    momentIndex: moment
-                ))
+                operations.append(CircuitOperation(type: .nQubit(qubits: involvedQubits, label: gateName), momentIndex: moment))
             }
 
-            // Push the moment forward for all affected wires
-            for q in involvedQubits {
-                currentMomentPerWire[q] = moment + 1
-            }
+            // Push all involved wires to the same timeline position
+            for q in involvedQubits { currentMomentPerWire[q] = moment + 1 }
         }
 
-        logger.info("Finished parsing of string \(qasm).")
-        return ParsedCircuit(wires: wires, operations: operations)
+        logger.info("Finished raw parsing of string \(qasm). Proceeding to compaction.")
+
+        // MARK: - Compaction Phase
+
+        // 1. Find all physical qubits that actually have operations
+        var activePhysicalQubits: Set<Int> = []
+        for op in operations {
+            activePhysicalQubits.formUnion(op.involvedQubits)
+        }
+
+        // 2. Sort qubits so the wires appear in standard ascending order (e.g. 67, 69, 98...)
+        let sortedQubits = Array(activePhysicalQubits).sorted()
+
+        // 3. Create a mapping from physical qubit index to a visual row index
+        var physicalToVisualMap: [Int: Int] = [:]
+        var compactedWires: [Wire] = []
+
+        for (visualIndex, physicalId) in sortedQubits.enumerated() {
+            physicalToVisualMap[physicalId] = visualIndex
+            // Wire keeps hardware label but gets a visual index for Canvas drawing logic
+            compactedWires.append(Wire(id: visualIndex, label: "q[\(physicalId)]"))
+        }
+
+        // 4. Adjust applied operations to use the visual indices
+        let compactedOperations = operations.map { op -> CircuitOperation in
+            let mappedType: GateVisualType
+
+            switch op.type {
+            case .singleQubit(let target, let label, let param):
+                mappedType = .singleQubit(target: physicalToVisualMap[target]!, label: label, parameter: param)
+
+            case .multiQubit(let control, let target, let label):
+                mappedType = .multiQubit(control: physicalToVisualMap[control]!, target: physicalToVisualMap[target]!, label: label)
+
+            case .nQubit(let qubits, let label):
+                mappedType = .nQubit(qubits: qubits.compactMap { physicalToVisualMap[$0] }, label: label)
+
+            case .barrier(let qubits):
+                mappedType = .barrier(qubits: qubits.compactMap { physicalToVisualMap[$0] })
+
+            case .measurement(let qubit, let classicalBit):
+                mappedType = .measurement(qubit: physicalToVisualMap[qubit]!, classicalBit: classicalBit)
+            }
+
+            return CircuitOperation(type: mappedType, momentIndex: op.momentIndex)
+        }
+
+        logger.info("Compaction phase finished successfully: \(physicalToVisualMap).")
+
+        return ParsedCircuit(wires: compactedWires, operations: compactedOperations)
     }
 
     // MARK: - Helpers
