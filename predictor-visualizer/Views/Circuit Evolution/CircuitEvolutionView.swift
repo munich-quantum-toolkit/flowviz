@@ -18,7 +18,7 @@ struct CircuitEvolutionView: View {
 
     // UI Constants for Canvas Alignment
     let rowHeight: CGFloat = 40
-    let columnWidth: CGFloat = 60
+    let minColumnWidth: CGFloat = 50
 
     init(trace: CompilationTrace, step: Int = 0) {
         self.trace = trace
@@ -36,7 +36,7 @@ struct CircuitEvolutionView: View {
                 CanvasRenderView(
                     currentCircuit: currentCircuit,
                     rowHeight: rowHeight,
-                    columnWidth: columnWidth
+                    defaultColumnWidth: minColumnWidth
                 )
 
                 // MARK: - Current Action Selector

@@ -10,11 +10,17 @@ import SwiftUI
 struct CanvasRenderView: View {
     let currentCircuit: ParsedCircuit
     let rowHeight: CGFloat
-    let columnWidth: CGFloat
+    let defaultColumnWidth: CGFloat
 
-    let edgeBuffer: CGFloat = 12
+    let edgeBuffer: CGFloat = 8
 
     var body: some View {
+        let canvasHeight = CGFloat(currentCircuit.wires.count) * rowHeight
+        let (momentCenters, columnWidths) = calculateMomentCenters(circuit: currentCircuit, minWidth: defaultColumnWidth)
+
+        // Total width is simply the last center + half its width + edge buffer
+        let totalCalculatedWidth = (momentCenters.last ?? 0) + ((columnWidths.last ?? 0) / 2) + edgeBuffer
+
         HStack(alignment: .top, spacing: 16) {
             // --- LEFT COLUMN: Fixed Qubit Labels ---
             VStack(alignment: .trailing, spacing: 0) {
@@ -28,10 +34,6 @@ struct CanvasRenderView: View {
 
             // --- RIGHT COLUMN: Scrollable Canvas ---
             ScrollView(.horizontal, showsIndicators: true) {
-
-                let calculatedWidth = (CGFloat(max(currentCircuit.totalMoments, 1)) * columnWidth) + (edgeBuffer * 2)
-                let canvasHeight = CGFloat(currentCircuit.wires.count) * rowHeight
-
                 Canvas { context, size in
                     // Draw horizontal wires
                     for i in 0..<currentCircuit.wires.count {
@@ -46,7 +48,7 @@ struct CanvasRenderView: View {
 
                     // Draw Operations
                     for op in currentCircuit.operations {
-                        let xCenter = edgeBuffer + (CGFloat(op.momentIndex) * columnWidth) + (columnWidth / 2)
+                        let xCenter = momentCenters[op.momentIndex]
 
                         switch op.type {
                         case .singleQubit(let target, _, _), .measurement(let target, _):
@@ -145,11 +147,51 @@ struct CanvasRenderView: View {
                     }
                 }
                 .containerRelativeFrame(.horizontal) { containerWidth, _ in
-                    max(calculatedWidth, containerWidth)
+                    max(totalCalculatedWidth, containerWidth)
                 }
                 .frame(height: canvasHeight)
             }
         }
+    }
+
+    /// Helper function that estimates the required width for the gates and updates the moment centers accordingly.
+    func calculateMomentCenters(circuit: ParsedCircuit, minWidth: CGFloat) -> (centers: [CGFloat], widths: [CGFloat]) {
+        // minWidth needed so empty columns or swap gates don't collapse to 0 width.
+        var columnWidths: [CGFloat] = Array(repeating: minWidth, count: max(circuit.totalMoments, 1))
+
+        // Find the widest gate in each moment
+        for op in circuit.operations {
+            let textLength: Int
+
+            // Extract the text that will actually be drawn
+            switch op.type {
+            case .singleQubit(_, let label, let parameter):
+                // + 2 accounts for the "()" wrapped around the parameter
+                textLength = if let param = parameter { label.count + param.count + 2 } else { label.count }
+            case .multiQubit(_, _, let label), .nQubit(_, let label):
+                textLength = label.count
+            default:
+                textLength = 0
+            }
+
+            // Estimate required width: ~4 points per character + 16 points padding + 32 points spacing
+            let estimatedRequiredWidth = CGFloat(textLength * 4) + 16 + 32
+
+            if estimatedRequiredWidth > columnWidths[op.momentIndex] {
+                columnWidths[op.momentIndex] = estimatedRequiredWidth
+            }
+        }
+
+        // Calculate the exact X-center coordinate for each moment
+        var centers: [CGFloat] = []
+        var currentX: CGFloat = edgeBuffer
+
+        for width in columnWidths {
+            centers.append(currentX + (width / 2))
+            currentX += width
+        }
+
+        return (centers, columnWidths)
     }
 }
 
@@ -157,9 +199,9 @@ struct CanvasRenderView: View {
     ZStack {
         Color.white
         CanvasRenderView(
-            currentCircuit: QASMParser.parse(qasm: CompilationTrace.previewMock.steps[0].circuitQasm3),
+            currentCircuit: QASMParser.parse(qasm: CompilationTrace.previewMock.steps[8].circuitQasm3),
             rowHeight: 40,
-            columnWidth: 60
+            defaultColumnWidth: 40
         )
         .padding()
     }
