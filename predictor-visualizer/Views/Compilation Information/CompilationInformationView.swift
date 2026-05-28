@@ -30,54 +30,28 @@ struct CompilationInformationView: View {
             Text("Compilation Information")
                 .font(.title2.bold())
 
-            LazyVGrid(columns: gridLayout, spacing: 16) {
-                GraphBoxView(
-                    title: "Parallelism",
-                    chartData: parallelismData,
-                    chartColor: Color.bluePrimary,
+            Grid(horizontalSpacing: 16, verticalSpacing: 16) {
+                GridRow {
+                    GraphBoxView(title: "Parallelism", chartData: parallelismData, chartColor: Color.bluePrimary)
+                        .aspectRatio(1, contentMode: .fit)
 
-                )
-                .aspectRatio(1, contentMode: .fit)
+                    GraphBoxView(title: "Entanglement Ratio", chartData: entanglementData, chartColor: Color.bluePrimary)
+                        .aspectRatio(1, contentMode: .fit)
 
-                GraphBoxView(
-                    title: "Entanglement Ratio",
-                    chartData: entanglementData,
-                    chartColor: Color.bluePrimary,
+                    GraphBoxView(title: "Liveness", chartData: livenessData, chartColor: Color.bluePrimary)
+                        .aspectRatio(1, contentMode: .fit)
+                }
 
-                )
-                .aspectRatio(1, contentMode: .fit)
+                GridRow {
+                    GraphBoxView(title: "Used Qubits", chartData: qubitsData, chartColor: Color.bluePrimary)
+                        .aspectRatio(1, contentMode: .fit)
 
-                GraphBoxView(
-                    title: "Liveness",
-                    chartData: livenessData,
-                    chartColor: Color.bluePrimary,
+                    GraphBoxView(title: "RL Reward", chartData: rewardData, chartColor: Color.bluePrimary)
+                        .aspectRatio(1, contentMode: .fit)
 
-                )
-                .aspectRatio(1, contentMode: .fit)
-
-                GraphBoxView(
-                    title: "Used Qubits",
-                    chartData: qubitsData,
-                    chartColor: Color.bluePrimary,
-
-                )
-                .aspectRatio(1, contentMode: .fit)
-
-                GraphBoxView(
-                    title: "RL Reward",
-                    chartData: rewardData,
-                    chartColor: Color.bluePrimary,
-
-                )
-                .aspectRatio(1, contentMode: .fit)
-
-                GraphBoxView(
-                    title: "Critical Depth",
-                    chartData: depthData,
-                    chartColor: Color.bluePrimary,
-
-                )
-                .aspectRatio(1, contentMode: .fit)
+                    GraphBoxView(title: "Critical Depth", chartData: depthData, chartColor: Color.bluePrimary)
+                        .aspectRatio(1, contentMode: .fit)
+                }
             }
 
             GraphBoxView(

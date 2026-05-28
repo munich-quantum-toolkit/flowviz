@@ -43,19 +43,14 @@ struct GraphBoxView: View {
                             x: .value("Step", dataPoint.step),
                             y: .value("Value", dataPoint.value)
                         )
-                        .interpolationMethod(.catmullRom)
+                        .interpolationMethod(.monotone)
                         .foregroundStyle(by: .value("Series", series.name))
 
                         PointMark(
                             x: .value("Step", dataPoint.step),
                             y: .value("Value", dataPoint.value)
                         )
-                        .symbol {
-                            Circle()
-                                .fill(dataPoint.tentative ? Color.white : series.color)
-                                .strokeBorder(series.color, lineWidth: 2)
-                                .frame(width: 9, height: 9)
-                        }
+                        .symbol(dataPoint.tentative ? .cross : .circle)
                         .foregroundStyle(by: .value("Series", series.name))
                     }
                 }
@@ -102,10 +97,15 @@ struct GraphBoxView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             ForEach(currentData, id: \.name) { item in
                                 HStack(spacing: 6) {
-                                    Circle()
-                                        .fill(item.tentative ? Color.white : item.color)
-                                        .strokeBorder(item.color, lineWidth: 2)
-                                        .frame(width: 8, height: 8)
+                                    if item.tentative {
+                                        BasicChartSymbolShape.cross
+                                            .fill(item.color)
+                                            .frame(width: 8, height: 8)
+                                    } else {
+                                        BasicChartSymbolShape.circle
+                                            .fill(item.color)
+                                            .frame(width: 8, height: 8)
+                                    }
 
                                     Text(String(format: "%.2f", item.value))
                                         .font(.footnote.bold())
