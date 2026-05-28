@@ -190,8 +190,8 @@ final class QASMParser {
         }
     }
 
-    /// Searches a parameter string for floating-point numbers and formats them to 3 decimal places.
-    /// 
+    /// Searches a parameter string for floating-point numbers and formats them to 3 decimal places. Additionally replaces "pi" with "π".
+    ///
     /// Leaves non-numeric characters (like 'pi') untouched.
     /// - Parameter parameter: The label of a quantum gate.
     /// - Returns: The formatted label.
@@ -212,9 +212,17 @@ final class QASMParser {
                     formattedString = (formattedString as NSString).replacingCharacters(in: result.range, with: formattedValue)
                 }
             }
-            return formattedString
+            return formattedString.replacingOccurrences(
+                of: "pi",
+                with: "π",
+                options: .caseInsensitive
+            )
         } catch {
-            return gateLabel
+            return gateLabel.replacingOccurrences(
+                of: "pi",
+                with: "π",
+                options: .caseInsensitive
+            )
         }
     }
 
