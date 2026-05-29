@@ -3,7 +3,7 @@
     "figure_of_merit": "expected_fidelity",
     "mdp_policy": "paper",
     "device": {
-        "description": "ibm_falcon_127",
+        "name": "ibm_falcon_127",
         "device_qubits": 127,
         "native_gates": [
             "id",

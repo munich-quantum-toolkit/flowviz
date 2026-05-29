@@ -9,16 +9,16 @@
 import Foundation
 
 struct DeviceMetadata: Codable, Hashable {
-    let description: String
+    let name: String
     let deviceQubits: Int
     let nativeGates: [String]
     let topology: [TopologyEdge]
     let calibrationData: [String: [GateCalibration]]
 
     var formattedDeviceName: String {
-        let components = description.components(separatedBy: "_")
+        let components = name.components(separatedBy: "_")
 
-        guard let vendor = components.first else { return description }
+        guard let vendor = components.first else { return name }
 
         let capitalizedRest = components.dropFirst().map { $0.capitalized }
         let finalComponents = [vendor.uppercased()] + capitalizedRest

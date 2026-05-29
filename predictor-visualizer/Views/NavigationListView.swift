@@ -19,7 +19,7 @@ struct NavigationListView: View {
         } else {
             return traces.filter { trace in
                 trace.circuitName.localizedCaseInsensitiveContains(searchText) ||
-                trace.device.description.localizedCaseInsensitiveContains(searchText)
+                trace.device.name.localizedCaseInsensitiveContains(searchText)
             }
         }
     }

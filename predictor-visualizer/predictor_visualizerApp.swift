@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct predictor_visualizerApp: App {    
@@ -14,5 +15,6 @@ struct predictor_visualizerApp: App {
             ContentView()
                 .preferredColorScheme(.light)
         }
+        .modelContainer(for: CompilationTrace.self)
     }
 }

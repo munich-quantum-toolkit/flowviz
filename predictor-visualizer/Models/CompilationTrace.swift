@@ -7,18 +7,67 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 
-struct CompilationTrace: Codable, Hashable, Identifiable {
-    let id = UUID()
-    
-    let circuitName: String
-    let figureOfMerit: String
-    let mdpPolicy: String
-    let device: DeviceMetadata
-    let schemaVersion: String
-    let timestamp: Double
-    let steps: [CompilationStep]
-    
+@Model
+final class CompilationTrace: Codable, Identifiable {
+    @Attribute(.unique) var id: String
+
+    var circuitName: String
+    var figureOfMerit: String
+    var mdpPolicy: String
+    var device: DeviceMetadata
+    var schemaVersion: String
+    var timestamp: Double
+    var steps: [CompilationStep]
+
+    init(id: String, circuitName: String, figureOfMerit: String, mdpPolicy: String, device: DeviceMetadata, schemaVersion: String, timestamp: Double, steps: [CompilationStep]) {
+        self.id = id
+        self.circuitName = circuitName
+        self.figureOfMerit = figureOfMerit
+        self.mdpPolicy = mdpPolicy
+        self.device = device
+        self.schemaVersion = schemaVersion
+        self.timestamp = timestamp
+        self.steps = steps
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case circuitName
+        case figureOfMerit
+        case mdpPolicy
+        case device
+        case schemaVersion
+        case timestamp
+        case steps
+    }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        self.id = UUID().uuidString
+        self.circuitName = try container.decode(String.self, forKey: .circuitName)
+        self.figureOfMerit = try container.decode(String.self, forKey: .figureOfMerit)
+        self.mdpPolicy = try container.decode(String.self, forKey: .mdpPolicy)
+        self.device = try container.decode(DeviceMetadata.self, forKey: .device)
+        self.schemaVersion = try container.decode(String.self, forKey: .schemaVersion)
+        self.timestamp = try container.decode(Double.self, forKey: .timestamp)
+        self.steps = try container.decode([CompilationStep].self, forKey: .steps)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(circuitName, forKey: .circuitName)
+        try container.encode(figureOfMerit, forKey: .figureOfMerit)
+        try container.encode(mdpPolicy, forKey: .mdpPolicy)
+        try container.encode(device, forKey: .device)
+        try container.encode(schemaVersion, forKey: .schemaVersion)
+        try container.encode(timestamp, forKey: .timestamp)
+        try container.encode(steps, forKey: .steps)
+    }
+
     /// Collects the actions that were applied throughout the compilation.
     /// - Returns: An array of ``TimelineSequence`` values.
     func getActionEvolution() -> [TimelineSequence] {
