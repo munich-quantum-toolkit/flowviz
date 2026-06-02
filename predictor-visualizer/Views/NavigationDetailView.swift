@@ -18,6 +18,7 @@ struct NavigationDetailView: View {
                 CircuitEvolutionView(trace: trace)
                 CompilationPipelineView(trace: trace)
                 MDPEvolutionView(trace: trace)
+                FooterNoteView()
             }
             .padding(EdgeInsets(top: 0, leading: 24, bottom: 24, trailing: 24))
         }
