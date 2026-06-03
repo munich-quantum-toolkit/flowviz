@@ -9715,7 +9715,7 @@
             "laid_out": false,
             "routed": false,
             "is_terminal": false,
-            "circuit_qasm3": "OPENQASM 3.0;\ninclude \"stdgates.inc\";\nbit[3] meas;\nqubit[3] q;\nh q[2];\ncx q[2], q[1];\ncx q[1], q[0];\nswap q[0], q[2];\nccx q[0], q[1], q[2];\nbarrier q[0], q[1], q[2];\nmeas[0] = measure q[0];\nmeas[1] = measure q[1];\nmeas[2] = measure q[2];\n",
+            "circuit_qasm3": "OPENQASM 3.0;\ninclude \"stdgates.inc\";\nbit[6] meas;\nqubit[6] q;\nh q[0];\nrz(pi/2) q[2];\nswap q[1], q[4];\nx q[2];\nx q[3];\nccx q[0], q[2], q[4];\nctrl @ rx(pi) q[0], q[3];\nctrl @ ctrl @ z q[1], q[2], q[5];\nctrl(3) @ h q[0], q[2], q[4], q[5];\ny q[1];\ny q[3];\nctrl @ swap q[0], q[2], q[5];\nbarrier q[0], q[1], q[2], q[3], q[4], q[5];\nmy_custom_gate q[0], q[1];\ncswap q[0], q[2], q[5];\nmeas[0] = measure q[0];\nmeas[5] = measure q[5];\n",
             "program_communication": 0.6666666865348816,
             "raw_critical_depth": 1.0,
             "entanglement_ratio": 0.6666666865348816,
