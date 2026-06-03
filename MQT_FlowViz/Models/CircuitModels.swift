@@ -17,7 +17,7 @@ struct Wire: Identifiable, Hashable {
 enum GateVisualType {
     case singleQubit(target: Int, label: String, parameter: String?)
     case multiQubit(control: Int, target: Int, label: String)
-    case nQubit(qubits: [Int], label: String) // For custom/oracle gates spanning 3+ wires
+    case nQubit(controls: [Int], targets: [Int], label: String) // For gates involving 3+ qubits
     case barrier(qubits: [Int])
     case measurement(qubit: Int, classicalBit: Int)
 }
@@ -35,7 +35,7 @@ struct CircuitOperation: Identifiable {
         switch type {
         case .singleQubit(let t, _, _): return [t]
         case .multiQubit(let c, let t, _): return [c, t]
-        case .nQubit(let qs, _): return qs
+        case .nQubit(let controls, let targets, _): return controls + targets
         case .barrier(let qs): return qs
         case .measurement(let q, _): return [q]
         }

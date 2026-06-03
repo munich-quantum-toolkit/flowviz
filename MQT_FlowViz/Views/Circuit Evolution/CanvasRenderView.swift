@@ -58,34 +58,21 @@ struct CanvasRenderView: View {
                                 context.draw(symbol, at: CGPoint(x: xCenter, y: yCenter))
                             }
 
-                        case .multiQubit(let control, let target, let label):
+                        case .multiQubit(let control, let target, _):
                             let yControl = CGFloat(control) * rowHeight + (rowHeight / 2)
                             let yTarget = CGFloat(target) * rowHeight + (rowHeight / 2)
 
-                            if label.lowercased() == "swap" {
-                                var path = Path()
-                                path.move(to: CGPoint(x: xCenter, y: yControl))
-                                path.addLine(to: CGPoint(x: xCenter, y: yTarget))
-                                context.stroke(path, with: .color(.bluePrimary), style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
+                            // Standard solid line and dot
+                            var path = Path()
+                            path.move(to: CGPoint(x: xCenter, y: yControl))
+                            path.addLine(to: CGPoint(x: xCenter, y: yTarget))
+                            context.stroke(path, with: .color(.bluePrimary), lineWidth: 2)
 
-                                let cross = Text(Image(systemName: "xmark"))
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(.bluePrimary)
+                            let dotRect = CGRect(x: xCenter - 3, y: yControl - 3, width: 6, height: 6)
+                            context.fill(Path(ellipseIn: dotRect), with: .color(.bluePrimary))
 
-                                context.draw(cross, at: CGPoint(x: xCenter, y: yControl))
-                                context.draw(cross, at: CGPoint(x: xCenter, y: yTarget))
-                            } else {
-                                var path = Path()
-                                path.move(to: CGPoint(x: xCenter, y: yControl))
-                                path.addLine(to: CGPoint(x: xCenter, y: yTarget))
-                                context.stroke(path, with: .color(.bluePrimary), lineWidth: 2)
-
-                                let dotRect = CGRect(x: xCenter - 3, y: yControl - 3, width: 6, height: 6)
-                                context.fill(Path(ellipseIn: dotRect), with: .color(.bluePrimary))
-
-                                if let symbol = context.resolveSymbol(id: op.id) {
-                                    context.draw(symbol, at: CGPoint(x: xCenter, y: yTarget))
-                                }
+                            if let symbol = context.resolveSymbol(id: op.id) {
+                                context.draw(symbol, at: CGPoint(x: xCenter, y: yTarget))
                             }
 
                         case .barrier(let qubits):
@@ -98,22 +85,53 @@ struct CanvasRenderView: View {
                             path.addRoundedRect(in: rect, cornerSize: CGSize(width: 4, height: 4))
                             context.stroke(path, with: .color(.bluePrimary), style: StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
 
-                        case .nQubit(let qubits, _):
-                            guard let minQ = qubits.min(), let maxQ = qubits.max() else { continue }
+                        case .nQubit(let controls, let targets, let label):
+                            let allQubits = controls + targets
+                            guard let minQ = allQubits.min(), let maxQ = allQubits.max() else { continue }
+
                             let yMin = CGFloat(minQ) * rowHeight + (rowHeight / 2)
                             let yMax = CGFloat(maxQ) * rowHeight + (rowHeight / 2)
 
+                            let isSwap = label.lowercased() == "swap" || label.lowercased() == "cswap"
+
+                            // 1. Draw the vertical line (dashed for swaps, solid for others)
                             var path = Path()
                             path.move(to: CGPoint(x: xCenter, y: yMin))
                             path.addLine(to: CGPoint(x: xCenter, y: yMax))
-                            context.stroke(path, with: .color(.bluePrimary), lineWidth: 2)
 
-                            if let symbol = context.resolveSymbol(id: op.id) {
-                                context.draw(symbol, at: CGPoint(x: xCenter, y: (yMin + yMax) / 2))
+                            if isSwap {
+                                context.stroke(path, with: .color(.bluePrimary), style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
+                            } else {
+                                context.stroke(path, with: .color(.bluePrimary), lineWidth: 2)
+                            }
+
+                            // 2. Draw the solid dots for every control qubit
+                            for control in controls {
+                                let yControl = CGFloat(control) * rowHeight + (rowHeight / 2)
+                                let dotRect = CGRect(x: xCenter - 3, y: yControl - 3, width: 6, height: 6)
+                                context.fill(Path(ellipseIn: dotRect), with: .color(.bluePrimary))
+                            }
+
+                            // 3. Draw the targets (xmarks for swaps, resolved symbols for standard gates)
+                            if isSwap {
+                                let cross = Text(Image(systemName: "xmark"))
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.bluePrimary)
+
+                                for target in targets {
+                                    let yTarget = CGFloat(target) * rowHeight + (rowHeight / 2)
+                                    context.draw(cross, at: CGPoint(x: xCenter, y: yTarget))
+                                }
+                            } else {
+                                if let symbol = context.resolveSymbol(id: op.id) {
+                                    for target in targets {
+                                        let yTarget = CGFloat(target) * rowHeight + (rowHeight / 2)
+                                        context.draw(symbol, at: CGPoint(x: xCenter, y: yTarget))
+                                    }
+                                }
                             }
                         }
                     }
-
                 } symbols: {
                     ForEach(currentCircuit.operations) { op in
                         switch op.type {
@@ -123,14 +141,15 @@ struct CanvasRenderView: View {
                                 .tag(op.id)
 
                         case .multiQubit(_, _, let label):
-                            if label.lowercased() != "swap" {
+                            BoxedTextView(text: label.uppercased())
+                                .tag(op.id)
+
+                        case .nQubit(_, _, let label):
+                            let lowerLabel = label.lowercased()
+                            if lowerLabel != "swap" && lowerLabel != "cswap" {
                                 BoxedTextView(text: label.uppercased())
                                     .tag(op.id)
                             }
-
-                        case .nQubit(_, let label):
-                            BoxedTextView(text: label.uppercased())
-                                .tag(op.id)
 
                         case .measurement:
                             Image(systemName: "scope")
@@ -156,29 +175,40 @@ struct CanvasRenderView: View {
 
     /// Helper function that estimates the required width for the gates and updates the moment centers accordingly.
     func calculateMomentCenters(circuit: ParsedCircuit, minWidth: CGFloat) -> (centers: [CGFloat], widths: [CGFloat]) {
-        // minWidth needed so empty columns or swap gates don't collapse to 0 width.
+        // Start with a base minimum width for every column so empty spaces don't collapse
         var columnWidths: [CGFloat] = Array(repeating: minWidth, count: max(circuit.totalMoments, 1))
 
-        // Find the widest gate in each moment
+        // Find the widest visual element in each moment column
         for op in circuit.operations {
-            let textLength: Int
+            let requiredWidth: CGFloat
 
-            // Extract the text that will actually be drawn
             switch op.type {
             case .singleQubit(_, let label, let parameter):
-                // + 2 accounts for the "()" wrapped around the parameter
-                textLength = if let param = parameter { label.count + param.count + 2 } else { label.count }
-            case .multiQubit(_, _, let label), .nQubit(_, let label):
-                textLength = label.count
-            default:
-                textLength = 0
+                let textLength = if let param = parameter { label.count + param.count + 2 } else { label.count }
+                // estimate of ~8 points per char + 24pt padding inside the box + 16pt margin
+                requiredWidth = CGFloat(textLength * 8) + 40
+
+            case .multiQubit(_, _, let label), .nQubit(_, _, let label):
+                let lowerLabel = label.lowercased()
+                if lowerLabel == "swap" || lowerLabel == "cswap" {
+                    // Swaps only draw xmarks, so they only need the minimum width
+                    requiredWidth = minWidth
+                } else {
+                    requiredWidth = CGFloat(label.count * 8) + 40
+                }
+
+            case .barrier:
+                // Barriers are just slim rectangles
+                requiredWidth = 24
+
+            case .measurement:
+                // Measurements are fixed-size square icons
+                requiredWidth = 40
             }
 
-            // Estimate required width: ~4 points per character + 16 points padding + 32 points spacing
-            let estimatedRequiredWidth = CGFloat(textLength * 4) + 16 + 32
-
-            if estimatedRequiredWidth > columnWidths[op.momentIndex] {
-                columnWidths[op.momentIndex] = estimatedRequiredWidth
+            // Overwrite the column width if this specific gate needs more room than what is currently allocated
+            if requiredWidth > columnWidths[op.momentIndex] {
+                columnWidths[op.momentIndex] = requiredWidth
             }
         }
 

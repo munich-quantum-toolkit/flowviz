@@ -61,7 +61,7 @@ final class QASMParser {
 
             // 4) Handle Barrier Operations
             if line.hasPrefix("barrier") {
-                let qubits = extractAllIntegers(from: line)
+                let qubits = extractAllQubitIntegers(from: line)
                 if !qubits.isEmpty {
                     let maxMoment = qubits.compactMap { currentMomentPerWire[$0] }.max() ?? 0
                     operations.append(CircuitOperation(type: .barrier(qubits: qubits), momentIndex: maxMoment))
@@ -72,46 +72,94 @@ final class QASMParser {
                 continue
             }
 
-            // 5) Handle Logic Gates (e.g. `cx q[0], q[1];` or `rz(-pi/2) q[4];`)
-            // Split the gate identifier from the affected qubit(s)
+            // 5) Handle Logic Gates
             let cleanLine = line.replacingOccurrences(of: ";", with: "")
-            let parts = cleanLine.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
-            guard parts.count == 2 else {
-                logger.warning("[LOGIC GATES] - Could not parse suspected logic gate: \(line)")
+
+            // Extract everything before the first qubit declaration as the gate identifier
+            // For instance "ctrl @ x q[0]" splits into ""ctrl @ x " and "q[0]"
+            let gateIdentifierEndIndex = cleanLine.range(of: "q[")?.lowerBound ?? cleanLine.endIndex
+            let rawGateIdentifier = String(cleanLine[..<gateIdentifierEndIndex]).trimmingCharacters(in: .whitespaces)
+
+            guard !rawGateIdentifier.isEmpty else {
+                logger.warning("Could not extract raw gate identifier for line: \(line)")
                 continue
             }
 
-            let gateIdentifier = String(parts[0])
-            let qubitsPart = String(parts[1])
+            let involvedQubits = extractAllQubitIntegers(from: cleanLine)
+            guard !involvedQubits.isEmpty else { continue }
 
-            // Separate the gate name from its parameter, if it has one (e.g., U(pi/2, 0, pi))
-            let gateName = gateIdentifier.components(separatedBy: "(").first ?? gateIdentifier
+            // --- OBTAIN CONTROL/TARGET QUBITS ---
+            var numControls = 0
+            let lowerGate = rawGateIdentifier.lowercased()
+            let baseGateName = lowerGate.components(separatedBy: "(").first ?? lowerGate
+
+            // 1. Check for explicit QASM 3 modifiers (e.g., "ctrl @ ctrl @" or "ctrl(5)")
+            if lowerGate.contains("ctrl") {
+                if let match = match(pattern: "ctrl\\((\\d+)\\)", in: lowerGate), let k = Int(match) {
+                    numControls = k
+                } else {
+                    numControls = lowerGate.components(separatedBy: "ctrl").count - 1
+                }
+            }
+            // 2. Check for matches of standard 3-qubit gates included in the QASM standard library
+            else if baseGateName == "ccx" {
+                numControls = 2
+            } else if baseGateName == "cswap" || baseGateName == "cswp" {
+                numControls = 1
+            }
+            // 3. Check for standard 2-qubit controlled gates in the QASM standard library
+            else if involvedQubits.count == 2 {
+                let standardControlledGates = ["cx", "cy", "cz", "ch", "cp", "crx", "cry", "crz", "cu"]
+                if standardControlledGates.contains(baseGateName) {
+                    numControls = 1
+                }
+            }
+
+            // Safety clamp (in case there would be a faulty QASM string that has more ctrls than qubits, for instance)
+            numControls = min(numControls, involvedQubits.count - 1)
+
+            let controls = Array(involvedQubits.prefix(numControls))
+            let targets = Array(involvedQubits.dropFirst(numControls))
+
+            // --- EXTRACT BASE GATE ---
+            // Strip out possible "ctrl @" prefixes to find the clean base gate for the UI label
+            var baseGateIdentifier = rawGateIdentifier
+            while let range = baseGateIdentifier.range(of: "(?i)ctrl(?:\\(\\d+\\))?\\s*@\\s*", options: .regularExpression) {
+                baseGateIdentifier.removeSubrange(range)
+            }
+
+            let gateName = baseGateIdentifier.components(separatedBy: "(").first ?? baseGateIdentifier
             var parameter: String? = nil
 
-            if let paramStart = gateIdentifier.firstIndex(of: "("), let paramEnd = gateIdentifier.lastIndex(of: ")") {
-                let start = gateIdentifier.index(after: paramStart)
-                let rawParameter = String(gateIdentifier[start..<paramEnd])
-                // Run the extracted parameter through the formatter before saving it
-                // We don't want full precision float numbers after all
+            if let paramStart = baseGateIdentifier.firstIndex(of: "("), let paramEnd = baseGateIdentifier.lastIndex(of: ")") {
+                let start = baseGateIdentifier.index(after: paramStart)
+                let rawParameter = String(baseGateIdentifier[start..<paramEnd])
                 parameter = formatParameter(rawParameter)
             }
 
-            let involvedQubits = extractAllIntegers(from: qubitsPart)
-            guard !involvedQubits.isEmpty else { continue }
+            // --- APPEND OPERATION & RESERVE SPAN ---
 
-            // Find the column where this gate should sit
-            let moment = involvedQubits.compactMap { currentMomentPerWire[$0] }.max() ?? 0
+            // 1. Calculate the full vertical span of this gate
+            let minQubit = involvedQubits.min() ?? 0
+            let maxQubit = involvedQubits.max() ?? 0
+            let spannedQubits = Array(minQubit...maxQubit)
 
-            if involvedQubits.count == 1 {
-                operations.append(CircuitOperation(type: .singleQubit(target: involvedQubits[0], label: gateName, parameter: parameter), momentIndex: moment))
-            } else if involvedQubits.count == 2 {
-                operations.append(CircuitOperation(type: .multiQubit(control: involvedQubits[0], target: involvedQubits[1], label: gateName), momentIndex: moment))
+            // 2. Find the latest available moment across the entire span
+            let moment = spannedQubits.compactMap { currentMomentPerWire[$0] }.max() ?? 0
+
+            // 3. Append the operation (only the explicitly involved qubits are passed to the UI)
+            if controls.isEmpty && targets.count == 1 {
+                operations.append(CircuitOperation(type: .singleQubit(target: targets[0], label: gateName, parameter: parameter), momentIndex: moment))
+            } else if controls.count == 1 && targets.count == 1 {
+                operations.append(CircuitOperation(type: .multiQubit(control: controls[0], target: targets[0], label: gateName), momentIndex: moment))
             } else {
-                operations.append(CircuitOperation(type: .nQubit(qubits: involvedQubits, label: gateName), momentIndex: moment))
+                operations.append(CircuitOperation(type: .nQubit(controls: controls, targets: targets, label: gateName), momentIndex: moment))
             }
 
-            // Push all involved wires to the same timeline position
-            for q in involvedQubits { currentMomentPerWire[q] = moment + 1 }
+            // 4. Advance the moment for every wire in the span to prevent overlaps
+            for q in spannedQubits {
+                currentMomentPerWire[q] = moment + 1
+            }
         }
 
         logger.info("Finished raw parsing of string \(qasm). Proceeding to compaction.")
@@ -148,8 +196,10 @@ final class QASMParser {
             case .multiQubit(let control, let target, let label):
                 mappedType = .multiQubit(control: physicalToVisualMap[control]!, target: physicalToVisualMap[target]!, label: label)
 
-            case .nQubit(let qubits, let label):
-                mappedType = .nQubit(qubits: qubits.compactMap { physicalToVisualMap[$0] }, label: label)
+            case .nQubit(let controls, let targets, let label):
+                let mappedControls = controls.compactMap { physicalToVisualMap[$0] }
+                let mappedTargets = targets.compactMap { physicalToVisualMap[$0] }
+                mappedType = .nQubit(controls: mappedControls, targets: mappedTargets, label: label)
 
             case .barrier(let qubits):
                 mappedType = .barrier(qubits: qubits.compactMap { physicalToVisualMap[$0] })
@@ -179,7 +229,7 @@ final class QASMParser {
     /// Extracts all integers corresponding to a Qubit declaration in a QASM line..
     /// - Parameter string: The string to be searched.
     /// - Returns: An array of all occuring integer values associated with a qubit.
-    private static func extractAllIntegers(from string: String) -> [Int] {
+    private static func extractAllQubitIntegers(from string: String) -> [Int] {
         do {
             let regex = try NSRegularExpression(pattern: "q\\[(\\d+)\\]")
             let nsString = string as NSString
