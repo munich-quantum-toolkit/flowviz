@@ -29,23 +29,34 @@ struct CircuitEvolutionView: View {
                 .font(.title2.bold())
 
             DashboardCardView {
-                VStack(spacing: 16) {
+                VStack(alignment: .center, spacing: 16) {
                     if let circuit = currentCircuit {
                         CanvasRenderView(
                             currentCircuit: circuit,
                             rowHeight: rowHeight,
                             defaultColumnWidth: minColumnWidth
                         )
-                    } else {
-                        ProgressView()
-                            .frame(height: 200)
-                    }
 
-                    ActionStepperView(
-                        actionName: trace.steps[currentStep].action,
-                        totalSteps: totalSteps,
-                        currentStep: $currentStep
-                    )
+                        ActionStepperView(
+                            actionName: trace.steps[currentStep].action,
+                            totalSteps: totalSteps,
+                            currentStep: $currentStep
+                        )
+                    } else {
+                        VStack(spacing: 12) {
+                            ProgressView()
+                                .controlSize(.small)
+                                .progressViewStyle(.circular)
+                                .foregroundStyle(.gray)
+                                .tint(.gray)
+                            Text("Parsing circuit...")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.gray)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 200)
+                    }
                 }
                 // Update the circuit whenever the stepper changes the step index
                 .onChange(of: currentStep) { _, newStep in
