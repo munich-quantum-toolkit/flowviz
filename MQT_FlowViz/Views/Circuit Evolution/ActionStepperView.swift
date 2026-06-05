@@ -30,6 +30,7 @@ struct ActionStepperView: View {
             }
             .buttonStyle(.borderless)
             .disabled(currentStep == 0)
+            .keyboardShortcut(.leftArrow, modifiers: [])
 
             // --- TEXT INPUT ---
             HStack(spacing: 8) {
@@ -85,6 +86,7 @@ struct ActionStepperView: View {
             }
             .buttonStyle(.borderless)
             .disabled(currentStep == totalSteps - 1)
+            .keyboardShortcut(.rightArrow, modifiers: [])
         }
         .fixedSize(horizontal: true, vertical: false)
     }
