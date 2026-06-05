@@ -17,8 +17,8 @@ struct NavigationDetailView: View {
                 DeviceInformationView(deviceData: currentTrace.device)
                 CompilationInformationView(trace: currentTrace)
                 CircuitEvolutionView(trace: currentTrace, currentStep: selectedStep)
-                CompilationPipelineView(trace: currentTrace)
-                MDPEvolutionView(trace: currentTrace)
+                CompilationPipelineView(trace: currentTrace, selectedStep: $selectedStep)
+                MDPEvolutionView(trace: currentTrace, selectedStep: $selectedStep)
                 FooterNoteView()
             }
             .padding(EdgeInsets(top: 0, leading: 24, bottom: 24, trailing: 24))

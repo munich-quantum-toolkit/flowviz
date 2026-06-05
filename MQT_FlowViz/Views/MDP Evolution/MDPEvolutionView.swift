@@ -9,10 +9,12 @@ import SwiftUI
 
 struct MDPEvolutionView: View {
     let trace: CompilationTrace
+    @Binding var selectedStep: Int
     let timelines: [TimelineSequence]
 
-    init(trace: CompilationTrace) {
+    init(trace: CompilationTrace, selectedStep: Binding<Int>) {
         self.trace = trace
+        self._selectedStep = selectedStep
 
         let (synthesizedRanges, laidOutRanges, routedRanges) = trace.getMDPStateEvolution()
 
@@ -44,12 +46,12 @@ struct MDPEvolutionView: View {
                 .font(.title2.bold())
 
             DashboardCardView(title: "Circuit State") {
-                TimelineView(sequences: timelines)
+                TimelineView(sequences: timelines, highlightedStep: $selectedStep)
             }
         }
     }
 }
 
 #Preview {
-    MDPEvolutionView(trace: CompilationTrace.previewMock)
+    MDPEvolutionView(trace: CompilationTrace.previewMock, selectedStep: .constant(0))
 }

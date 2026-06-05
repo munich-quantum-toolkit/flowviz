@@ -9,13 +9,15 @@ import SwiftUI
 
 struct CompilationPipelineView: View {
     let trace: CompilationTrace
+    @Binding var selectedStep: Int
     let timelines: [TimelineSequence]
     let collapsedCount = 6
 
     @State var expandedPipeline: Bool = false
 
-    init(trace: CompilationTrace) {
+    init(trace: CompilationTrace, selectedStep: Binding<Int>) {
         self.trace = trace
+        self._selectedStep = selectedStep
         self.timelines = trace.getActionEvolution()
     }
 
@@ -26,7 +28,7 @@ struct CompilationPipelineView: View {
 
             DashboardCardView(title: "Applied Actions") {
                 VStack(alignment: .center, spacing: 16) {
-                    TimelineView(sequences: Array(timelines.prefix(expandedPipeline ? timelines.count : collapsedCount)))
+                    TimelineView(sequences: Array(timelines.prefix(expandedPipeline ? timelines.count : collapsedCount)), highlightedStep: $selectedStep)
 
                     Button(action: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8, blendDuration: 0)) {
@@ -45,6 +47,6 @@ struct CompilationPipelineView: View {
 }
 
 #Preview {
-    CompilationPipelineView(trace: CompilationTrace.previewMock)
+    CompilationPipelineView(trace: CompilationTrace.previewMock, selectedStep: .constant(0))
         .frame(height: 550)
 }

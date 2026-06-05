@@ -57,16 +57,16 @@ struct ActionStepperView: View {
                         }
                     }
 
-                Text("/ \(totalSteps)")
+                Text("/ \(totalSteps - 1)")
                     .font(.callout.weight(.semibold))
                     .foregroundStyle(.black)
                     .monospacedDigit()
             }
             .onAppear {
-                stepInput = currentStep + 1
+                stepInput = currentStep
             }
             .onChange(of: currentStep) { _, newValue in
-                stepInput = newValue + 1
+                stepInput = newValue
             }
 
             // --- NEXT BUTTON ---
@@ -92,14 +92,14 @@ struct ActionStepperView: View {
     /// Helper method that validates and applies the provided step input from the user.
     private func applyManualStepInput() {
         guard let parsed = stepInput else {
-            stepInput = currentStep + 1
+            stepInput = currentStep
             return
         }
 
-        let bounded = max(1, min(parsed, totalSteps))
+        let bounded = max(0, min(parsed, totalSteps - 1))
 
         withAnimation(.easeInOut(duration: 0.2)) {
-            currentStep = bounded - 1
+            currentStep = bounded
         }
 
         stepInput = bounded

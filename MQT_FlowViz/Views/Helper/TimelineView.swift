@@ -8,6 +8,7 @@ import SwiftUI
 
 struct TimelineView: View {
     let sequences: [TimelineSequence]
+    @Binding var highlightedTimestep: Int
 
     let rowHeight: CGFloat = 44
     let rowSpacing: CGFloat = 20
@@ -16,10 +17,11 @@ struct TimelineView: View {
     let startingStep: Int
     let endingStep: Int
 
-    init(sequences: [TimelineSequence]) {
+    init(sequences: [TimelineSequence], highlightedStep: Binding<Int>) {
         self.sequences = sequences
         self.startingStep = sequences.compactMap { $0.minStep }.min() ?? 0
         self.endingStep = sequences.compactMap { $0.maxStep }.max() ?? 0
+        self._highlightedTimestep = highlightedStep
     }
 
     var body: some View {
@@ -61,30 +63,42 @@ struct TimelineView: View {
 
                 // --- RIGHT COLUMN (SCROLLABLE) ---
                 ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 0) {
-                        ForEach(startingStep...endingStep, id: \.self) { step in
-                            // The colored BoxedTextView
-                            StepColumn(
-                                step: step,
-                                sequences: sequences,
-                                rowHeight: rowHeight,
-                                rowSpacing: rowSpacing,
-                                pillHeight: innerPillHeight
-                            )
+                    ScrollViewReader { proxy in
+                        LazyHStack(spacing: 0) {
+                            ForEach(startingStep...endingStep, id: \.self) { step in
+                                HStack(spacing: 0) {
+                                    // The colored BoxedTextView
+                                    StepColumn(
+                                        step: step,
+                                        highlightedTimestep: $highlightedTimestep,
+                                        sequences: sequences,
+                                        rowHeight: rowHeight,
+                                        rowSpacing: rowSpacing,
+                                        pillHeight: innerPillHeight
+                                    )
 
-                            // The connecting dashed lines
-                            if step < endingStep {
-                                StepSeparator(
-                                    currentStep: step,
-                                    nextStep: step + 1,
-                                    sequences: sequences,
-                                    rowHeight: rowHeight,
-                                    rowSpacing: rowSpacing
-                                )
+                                    // The connecting dashed lines
+                                    if step < endingStep {
+                                        StepSeparator(
+                                            currentStep: step,
+                                            nextStep: step + 1,
+                                            sequences: sequences,
+                                            rowHeight: rowHeight,
+                                            rowSpacing: rowSpacing
+                                        )
+                                    }
+                                }
+                                .id(step)
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                        .onChange(of: highlightedTimestep) { _, newStep in
+                            let scrollTarget = newStep >= startingStep ? min(newStep, endingStep) : startingStep
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                proxy.scrollTo(scrollTarget, anchor: .center)
                             }
                         }
                     }
-                    .padding(.horizontal, 8)
                 }
             }
         }
@@ -95,6 +109,7 @@ struct TimelineView: View {
 
 struct StepColumn: View {
     let step: Int
+    @Binding var highlightedTimestep: Int
     let sequences: [TimelineSequence]
     let rowHeight: CGFloat
     let rowSpacing: CGFloat
@@ -106,9 +121,21 @@ struct StepColumn: View {
                 let isActive = phase.contains(step: step)
 
                 if isActive {
-                    BoxedTextView(text: "\(step)", backgroundColor: phase.backgroundColor, textColor: phase.textColor)
-                        .frame(width: 36, height: pillHeight) // Ensure consistent width
-                        .frame(height: rowHeight)
+                    if highlightedTimestep == step {
+                        // Highlighted Boxes have text color as background & white as text color
+                        BoxedTextView(text: "\(step)", backgroundColor: phase.textColor, textColor: .white)
+                            .frame(width: 36, height: pillHeight) // Ensure consistent width
+                            .frame(height: rowHeight)
+                    } else {
+                        BoxedTextView(text: "\(step)", backgroundColor: phase.backgroundColor, textColor: phase.textColor)
+                            .frame(width: 36, height: pillHeight) // Ensure consistent width
+                            .frame(height: rowHeight)
+                            .onTapGesture {
+                                withAnimation(.snappy(duration: 0.3)) {
+                                    highlightedTimestep = step
+                                }
+                            }
+                    }
                 } else {
                     if let min = phase.minStep, let max = phase.maxStep, step >= min && step <= max {
                         Line()
@@ -213,7 +240,7 @@ struct Line: Shape {
     ZStack {
         // NOTE: LazyHStack causes issues in the preview, but works fine in the simulator! Temporarily replace LazyHStack in Line 64 with HStack if you're developing using only the preview here.
         Color(white: 0.96).ignoresSafeArea()
-        TimelineView(sequences: mockSequences)
+        TimelineView(sequences: mockSequences, highlightedStep: .constant(0))
             .padding()
             .background(Color.white)
     }
