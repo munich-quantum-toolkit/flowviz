@@ -7,7 +7,6 @@
 import SwiftUI
 
 struct ActionStepperView: View {
-    let actionName: String
     let totalSteps: Int
     @Binding var currentStep: Int
 
@@ -16,10 +15,6 @@ struct ActionStepperView: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
-            Text(actionName)
-                .font(.callout.weight(.semibold))
-
-            Spacer()
 
             // --- PREVIOUS BUTTON ---
             Button(action: {
@@ -33,7 +28,7 @@ struct ActionStepperView: View {
                     .font(.callout.weight(.semibold))
                     .foregroundColor(currentStep > 0 ? .black : .gray.opacity(0.3))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.borderless)
             .disabled(currentStep == 0)
 
             // --- TEXT INPUT ---
@@ -43,6 +38,8 @@ struct ActionStepperView: View {
                     .textFieldStyle(.plain)
                     .multilineTextAlignment(.center)
                     .font(.callout.weight(.semibold))
+                    .foregroundStyle(.black)
+                    .monospacedDigit()
                     .frame(minWidth: 34)
                     .fixedSize(horizontal: true, vertical: false)
                     .padding([.top, .bottom], 6)
@@ -62,6 +59,8 @@ struct ActionStepperView: View {
 
                 Text("/ \(totalSteps)")
                     .font(.callout.weight(.semibold))
+                    .foregroundStyle(.black)
+                    .monospacedDigit()
             }
             .onAppear {
                 stepInput = currentStep + 1
@@ -84,9 +83,10 @@ struct ActionStepperView: View {
                     .fontWeight(.semibold)
                     .foregroundColor(currentStep < totalSteps - 1 ? .black : .gray.opacity(0.3))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.borderless)
             .disabled(currentStep == totalSteps - 1)
         }
+        .fixedSize(horizontal: true, vertical: false)
     }
 
     /// Helper method that validates and applies the provided step input from the user.

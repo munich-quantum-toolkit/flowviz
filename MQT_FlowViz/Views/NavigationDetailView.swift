@@ -8,28 +8,55 @@
 import SwiftUI
 
 struct NavigationDetailView: View {
-    let trace: CompilationTrace
+    let currentTrace: CompilationTrace
+    @State var selectedStep: Int = 0
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: 24) {
-                DeviceInformationView(deviceData: trace.device)
-                CompilationInformationView(trace: trace)
-                CircuitEvolutionView(trace: trace)
-                CompilationPipelineView(trace: trace)
-                MDPEvolutionView(trace: trace)
+                DeviceInformationView(deviceData: currentTrace.device)
+                CompilationInformationView(trace: currentTrace)
+                CircuitEvolutionView(trace: currentTrace, currentStep: selectedStep)
+                CompilationPipelineView(trace: currentTrace)
+                MDPEvolutionView(trace: currentTrace)
                 FooterNoteView()
             }
             .padding(EdgeInsets(top: 0, leading: 24, bottom: 24, trailing: 24))
         }
         .scrollDismissesKeyboard(.interactively)
         .hideKeyboardOnTap()
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                let actionText = selectedStep < currentTrace.steps.count ? currentTrace.steps[selectedStep].action : "Action"
+
+                Text(actionText)
+                    #if os(macOS)
+                    .font(.callout.weight(.semibold))
+                    #else
+                    .font(.headline)
+                    #endif
+                    .foregroundStyle(.black)
+                    .padding([.leading, .trailing], 12)
+                    .animation(nil, value: actionText)
+            }
+
+            ToolbarItem(placement: .primaryAction) {
+                ActionStepperView(
+                    totalSteps: currentTrace.steps.count,
+                    currentStep: $selectedStep
+                )
+                .padding([.leading, .trailing], 12)
+            }
+        }
+        .onChange(of: currentTrace) { _, _ in
+            selectedStep = 0
+        }
     }
 }
 
 #Preview {
     ZStack {
         Color.grayBackground.ignoresSafeArea()
-        NavigationDetailView(trace: CompilationTrace.previewMock)
+        NavigationDetailView(currentTrace: CompilationTrace.previewMock)
     }
 }

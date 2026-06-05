@@ -18,6 +18,7 @@ final class QASMParser {
 
      OPENQASM 2.0;\ninclude \"qelib1.inc\";\ngate gate_Oracle q0,q1,q2 { x q0; x q1; cx q0,q2; cx q1,q2; x q0; x q1; }\nqreg q[3];\ncreg c[2];\nx q[2];\nh q[2];\nh q[0];\nh q[1];\ngate_Oracle q[0],q[1],q[2];\nh q[0];\nh q[1];\nbarrier q[0],q[1],q[2];\nmeasure q[0] -> c[0];\nmeasure q[1] -> c[1];
 
+     OPENQASM 3.0;\ninclude \"stdgates.inc\";\nbit[6] meas;\nqubit[6] q;\nh q[0];\nrz(pi/2) q[2];\nswap q[1], q[4];\nx q[2];\nx q[3];\nccx q[0], q[2], q[4];\nctrl @ rx(pi) q[0], q[3];\nctrl @ ctrl @ z q[1], q[2], q[5];\nctrl(3) @ h q[0], q[2], q[4], q[5];\ny q[1];\ny q[3];\nctrl @ swap q[0], q[2], q[5];\nbarrier q[0], q[1], q[2], q[3], q[4], q[5];\nmy_custom_gate q[0], q[1];\ncswap q[0], q[2], q[5];\nmeas[0] = measure q[0];\nmeas[5] = measure q[5];\n
      */
 
     static func parse(qasm: String) -> ParsedCircuit {

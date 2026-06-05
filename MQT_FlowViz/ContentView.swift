@@ -15,19 +15,17 @@ struct ContentView: View {
     @State private var dataHandler = DataHandler()
     @State private var selectedTrace: CompilationTrace?
     @State private var isShowingFilePicker = false
-    
+
     var body: some View {
         NavigationSplitView {
             NavigationListView(traces: traces, selectedTrace: $selectedTrace, isShowingFilePicker: $isShowingFilePicker)
         } detail: {
             if let selected = selectedTrace {
-                NavigationDetailView(trace: selected)
+                NavigationDetailView(currentTrace: selected)
                     .background(Color.grayBackground)
-                #if os(macOS)
-                    .toolbarBackground(.hidden, for: .windowToolbar)
-                #elseif os(iOS)
-                    .toolbarVisibility(.hidden, for: .navigationBar)
-                #endif
+                    #if os(iOS)
+                    .navigationBarTitleDisplayMode(.inline)
+                    #endif
             } else {
                 PlaceholderView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

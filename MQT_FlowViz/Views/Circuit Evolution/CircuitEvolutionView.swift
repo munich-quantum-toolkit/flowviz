@@ -8,19 +8,20 @@ import SwiftUI
 
 struct CircuitEvolutionView: View {
     let trace: CompilationTrace
-    let totalSteps: Int
-
-    @State var currentStep = 0
+    let currentStep: Int
     @State var currentCircuit: ParsedCircuit? = nil
+
+    var currentActionName: String {
+        currentStep >= 0 && currentStep < trace.steps.count ? trace.steps[currentStep].action : "Unknown Action"
+    }
 
     // UI Constants for Canvas Alignment
     let rowHeight: CGFloat = 40
     let minColumnWidth: CGFloat = 50
 
-    init(trace: CompilationTrace, step: Int = 0) {
+    init(trace: CompilationTrace, currentStep: Int) {
         self.trace = trace
-        self.totalSteps = trace.steps.count
-        self._currentStep = State(initialValue: step)
+        self.currentStep = currentStep
     }
 
     var body: some View {
@@ -28,19 +29,13 @@ struct CircuitEvolutionView: View {
             Text("Circuit Evolution")
                 .font(.title2.bold())
 
-            DashboardCardView {
+            DashboardCardView(title: currentActionName) {
                 VStack(alignment: .center, spacing: 16) {
                     if let circuit = currentCircuit {
                         CanvasRenderView(
                             currentCircuit: circuit,
                             rowHeight: rowHeight,
                             defaultColumnWidth: minColumnWidth
-                        )
-
-                        ActionStepperView(
-                            actionName: trace.steps[currentStep].action,
-                            totalSteps: totalSteps,
-                            currentStep: $currentStep
                         )
                     } else {
                         VStack(spacing: 12) {
@@ -58,32 +53,31 @@ struct CircuitEvolutionView: View {
                         .frame(height: 200)
                     }
                 }
-                // Update the circuit whenever the stepper changes the step index
                 .onChange(of: currentStep) { _, newStep in
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        currentCircuit = QASMParser.parse(qasm: trace.steps[newStep].circuitQasm3)
+                    if newStep >= 0 && newStep < trace.steps.count {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            currentCircuit = QASMParser.parse(qasm: trace.steps[newStep].circuitQasm3)
+                        }
                     }
                 }
-                // Reset the circuit & step upon change of trace
-                .onChange(of: trace) { oldTrace, newTrace in
-                    currentStep = 0
-                    if let firstStep = newTrace.steps.first {
-                        currentCircuit = QASMParser.parse(qasm: firstStep.circuitQasm3)
+                .onChange(of: trace) { _, newTrace in
+                    if currentStep >= 0 && currentStep < newTrace.steps.count {
+                        currentCircuit = QASMParser.parse(qasm: newTrace.steps[currentStep].circuitQasm3)
                     }
                 }
-                // Parse circuit if view appears & circuit has not already been parsed.
                 .onAppear {
-                    if currentCircuit == nil, let firstStep = trace.steps.first {
-                        currentCircuit = QASMParser.parse(qasm: firstStep.circuitQasm3)
+                    if currentCircuit == nil && currentStep >= 0 && currentStep < trace.steps.count {
+                        currentCircuit = QASMParser.parse(qasm: trace.steps[currentStep].circuitQasm3)
                     }
                 }
             }
+            .clipped()
         }
         .contentShape(Rectangle())
     }
 }
 
 #Preview {
-    CircuitEvolutionView(trace: CompilationTrace.previewMock)
+    CircuitEvolutionView(trace: CompilationTrace.previewMock, currentStep: 0)
         .padding()
 }
