@@ -36,12 +36,14 @@ struct NavigationListView: View {
             }
             .onDelete(perform: deleteTraces)
         }
+        #if os(macOS)
         .onDeleteCommand {
             if let traceToDelete = selectedTrace,
                let index = filteredTraces.firstIndex(of: traceToDelete) {
                 delete(at: index)
             }
         }
+        #endif
         .navigationTitle("Compilations")
         .searchable(text: $searchText, placement: .sidebar)
         .toolbar {

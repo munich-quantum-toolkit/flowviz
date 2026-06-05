@@ -39,9 +39,6 @@ struct ActionStepperView: View {
             // --- TEXT INPUT ---
             HStack(spacing: 8) {
                 TextField("", value: $stepInput, format: .number.grouping(.never))
-                    #if os(iOS)
-                    .keyboardType(.numberPad)
-                    #endif
                     .focused($isFocused)
                     .textFieldStyle(.plain)
                     .multilineTextAlignment(.center)
@@ -56,6 +53,11 @@ struct ActionStepperView: View {
                     .onSubmit {
                         applyManualStepInput()
                         isFocused = false
+                    }
+                    .onChange(of: isFocused) { _, isNowFocused in
+                        if !isNowFocused {
+                            applyManualStepInput()
+                        }
                     }
 
                 Text("/ \(totalSteps)")
