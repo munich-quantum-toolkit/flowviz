@@ -4,7 +4,6 @@
 //
 //  Created by Linus Bohle on 05.05.26.
 //
-
 import SwiftUI
 import Charts
 
@@ -18,14 +17,33 @@ struct GraphBoxView: View {
     let chartMaxValue: Float
     let chartMinValue: Float
 
+    private let stepDataMap: [Int: [(name: String, color: Color, value: Float, tentative: Bool)]]
+
     init(title: String, seriesData: [ChartDataSet]) {
         self.title = title
         self.seriesData = seriesData
 
         self.chartDomain = seriesData.map { $0.name }
         self.chartColorRange = seriesData.map { $0.color }
-        self.chartMaxValue = seriesData.flatMap { $0.data }.map { $0.value }.max() ?? 1.0
-        self.chartMinValue = seriesData.flatMap { $0.data }.map { $0.value }.min() ?? 0.0
+
+        var localMax: Float = -Float.greatestFiniteMagnitude
+        var localMin: Float = Float.greatestFiniteMagnitude
+        var dict: [Int: [(name: String, color: Color, value: Float, tentative: Bool)]] = [:]
+
+        for series in seriesData {
+            for point in series.data {
+                if point.value > localMax { localMax = point.value }
+                if point.value < localMin { localMin = point.value }
+
+                // build the tooltip dictionary grouping by step
+                let info = (series.name, series.color, point.value, point.tentative)
+                dict[point.step, default: []].append(info)
+            }
+        }
+
+        self.chartMaxValue = localMax == -Float.greatestFiniteMagnitude ? 1.0 : localMax
+        self.chartMinValue = localMin == Float.greatestFiniteMagnitude ? 0.0 : localMin
+        self.stepDataMap = dict
     }
 
     init(title: String, chartData: [ChartDataPoint], chartColor: Color) {
@@ -43,16 +61,15 @@ struct GraphBoxView: View {
                             x: .value("Step", dataPoint.step),
                             y: .value("Value", dataPoint.value)
                         )
-                        .interpolationMethod(.monotone)
-                        .foregroundStyle(by: .value("Series", series.name))
 
                         PointMark(
                             x: .value("Step", dataPoint.step),
                             y: .value("Value", dataPoint.value)
                         )
                         .symbol(dataPoint.tentative ? .cross : .circle)
-                        .foregroundStyle(by: .value("Series", series.name))
                     }
+                    .interpolationMethod(.monotone)
+                    .foregroundStyle(by: .value("Series", series.name))
                 }
 
                 // Tooltip for selected step
@@ -65,8 +82,8 @@ struct GraphBoxView: View {
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
                     .zIndex(-1)
 
-                    // Collision Avoidance Logic
-                    let currentData = activeData(for: step)
+                    let currentData = stepDataMap[step] ?? []
+
                     let stepMax = currentData.map { $0.value }.max() ?? 0
                     let stepMin = currentData.map { $0.value }.min() ?? 0
                     let stepMidpoint = (stepMax + stepMin) / 2.0
@@ -137,16 +154,6 @@ struct GraphBoxView: View {
             .chartXScale(range: .plotDimension(startPadding: 6, endPadding: 24))
             .chartYScale(range: .plotDimension(padding: 12))
             .chartXSelection(value: $selectedStep)
-        }
-    }
-
-    /// Extracts the values for the selected step across all datasets.
-    private func activeData(for step: Int) -> [(name: String, color: Color, value: Float, tentative: Bool)] {
-        seriesData.compactMap { series in
-            if let point = series.data.first(where: { $0.step == step }) {
-                return (series.name, series.color, point.value, tentative: point.tentative)
-            }
-            return nil
         }
     }
 }
