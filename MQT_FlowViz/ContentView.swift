@@ -14,6 +14,8 @@ struct ContentView: View {
     @State private var dataHandler = DataHandler()
     @State private var selectedTrace: CompilationTrace?
     @State private var isShowingFilePicker = false
+    @State private var isShowingErrorAlert = false
+    @State private var errorMessage = ""
 
     var body: some View {
         NavigationSplitView {
@@ -45,16 +47,27 @@ struct ContentView: View {
         ) { result in
             handleFileSelection(result)
         }
+        .alert("Import Failed", isPresented: $isShowingErrorAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
+        }
     }
 
     fileprivate func handleFileSelection(_ result: Result<[URL], any Error>) {
         switch result {
         case .success(let urls):
             if let selectedURL = urls.first {
-                try? dataHandler.importTrace(from: selectedURL, into: modelContext)
+                do {
+                    try dataHandler.importTrace(from: selectedURL, into: modelContext)
+                } catch {
+                    errorMessage = error.localizedDescription
+                    isShowingErrorAlert = true
+                }
             }
         case .failure(let error):
-            print("Error selecting file: \(error.localizedDescription)")
+            errorMessage = error.localizedDescription
+            isShowingErrorAlert = true
         }
     }
 }

@@ -14,9 +14,16 @@ import OSLog
     ///
     /// All enumerations are accompanied by an associated string value, which should be a user-friendly error message
     /// describing what went wrong.
-    enum DataError: Error {
+    enum DataError: LocalizedError {
         case AccessFailed(String)
         case DecodingError(String)
+
+        var errorDescription: String? {
+            switch self {
+            case .AccessFailed(let message): return message
+            case .DecodingError(let message): return message
+            }
+        }
     }
 
     let logger: Logger = Logger(subsystem: "DataHandling", category: "DataHandler")
