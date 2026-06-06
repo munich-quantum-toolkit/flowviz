@@ -35,6 +35,9 @@ struct CanvasRenderView: View {
             // --- RIGHT COLUMN: Scrollable Canvas ---
             ScrollView(.horizontal, showsIndicators: true) {
                 Canvas { context, size in
+                    let targetCrossSymbol = context.resolveSymbol(id: "swapCross")
+                    let measurementSymbol = context.resolveSymbol(id: "measurement")
+
                     // Draw horizontal wires
                     for i in 0..<currentCircuit.wires.count {
                         let yPosition = CGFloat(i) * rowHeight + (rowHeight / 2)
@@ -51,10 +54,17 @@ struct CanvasRenderView: View {
                         let xCenter = momentCenters[op.momentIndex]
 
                         switch op.type {
-                        case .singleQubit(let target, _, _), .measurement(let target, _):
+                        case .singleQubit(let target, _, _):
                             let yCenter = CGFloat(target) * rowHeight + (rowHeight / 2)
 
                             if let symbol = context.resolveSymbol(id: op.id) {
+                                context.draw(symbol, at: CGPoint(x: xCenter, y: yCenter))
+                            }
+
+                        case .measurement(let target, _):
+                            let yCenter = CGFloat(target) * rowHeight + (rowHeight / 2)
+
+                            if let symbol = measurementSymbol {
                                 context.draw(symbol, at: CGPoint(x: xCenter, y: yCenter))
                             }
 
@@ -112,15 +122,13 @@ struct CanvasRenderView: View {
                                 context.fill(Path(ellipseIn: dotRect), with: .color(.bluePrimary))
                             }
 
-                            // 3. Draw the targets (xmarks for swaps, resolved symbols for standard gates)
+                            // 3. Draw the targets (xmarks for swaps, resolved boxes for standard gates)
                             if isSwap {
-                                let cross = Text(Image(systemName: "xmark"))
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(.bluePrimary)
-
-                                for target in targets {
-                                    let yTarget = CGFloat(target) * rowHeight + (rowHeight / 2)
-                                    context.draw(cross, at: CGPoint(x: xCenter, y: yTarget))
+                                if let cross = targetCrossSymbol {
+                                    for target in targets {
+                                        let yTarget = CGFloat(target) * rowHeight + (rowHeight / 2)
+                                        context.draw(cross, at: CGPoint(x: xCenter, y: yTarget))
+                                    }
                                 }
                             } else {
                                 if let symbol = context.resolveSymbol(id: op.id) {
@@ -133,6 +141,19 @@ struct CanvasRenderView: View {
                         }
                     }
                 } symbols: {
+                    Text(Image(systemName: "xmark"))
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.bluePrimary)
+                        .tag("swapCross")
+
+                    Image(systemName: "scope")
+                        .font(.caption.bold())
+                        .foregroundColor(.bluePrimary)
+                        .padding(8)
+                        .background(.blueBackground)
+                        .cornerRadius(8)
+                        .tag("measurement")
+
                     ForEach(currentCircuit.operations) { op in
                         switch op.type {
                         case .singleQubit(_, let label, let param):
@@ -149,18 +170,11 @@ struct CanvasRenderView: View {
                             if lowerLabel != "swap" && lowerLabel != "cswap" {
                                 BoxedTextView(text: label.uppercased())
                                     .tag(op.id)
+                            } else {
+                                EmptyView().tag(op.id)
                             }
 
-                        case .measurement:
-                            Image(systemName: "scope")
-                                .font(.caption.bold())
-                                .foregroundColor(.bluePrimary)
-                                .padding(8)
-                                .background(.blueBackground)
-                                .cornerRadius(8)
-                                .tag(op.id)
-
-                        case .barrier:
+                        case .measurement, .barrier:
                             EmptyView().tag(op.id)
                         }
                     }
