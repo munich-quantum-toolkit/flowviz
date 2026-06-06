@@ -16,7 +16,7 @@ struct ListItemView: View {
 
     var body: some View {
         HStack {
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(trace.circuitName)
                     .font(.headline)
                 Text(trace.device.formattedDeviceName + ", " + trace.device.deviceQubits.description + " qubits")
@@ -29,6 +29,7 @@ struct ListItemView: View {
             Image(systemName: "chevron.right")
                 .foregroundStyle(Color.primary)
         }
+        .padding([.top, .bottom], 4)
     }
 }
 
