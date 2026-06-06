@@ -19,6 +19,9 @@ struct EvolutionComparisonView: View {
     @State private var currentCircuit: ParsedCircuit? = nil
     @State private var comparedCircuit: ParsedCircuit? = nil
 
+    @State var parseErrorCurrentCircuit: String? = nil
+    @State var parseErrorComparedCircuit: String? = nil
+
     let rowHeight: CGFloat = 40
     let minColumnWidth: CGFloat = 50
 
@@ -40,8 +43,8 @@ struct EvolutionComparisonView: View {
 
         ScrollView {
             dynamicLayout {
-                circuitPanel(step: $currentStep, circuit: currentCircuit)
-                circuitPanel(step: $comparedStep, circuit: comparedCircuit)
+                circuitPanel(step: $currentStep, circuit: currentCircuit, parseError: parseErrorCurrentCircuit)
+                circuitPanel(step: $comparedStep, circuit: comparedCircuit, parseError: parseErrorComparedCircuit)
             }
             .padding()
         }
@@ -81,12 +84,13 @@ struct EvolutionComparisonView: View {
             loadComparedCircuit()
             syncSteps(fromPrimary: false, oldVal: oldStep, newVal: newStep)
         }
+        .hideKeyboardOnTap()
     }
 
     // MARK: - Subcomponents
 
     @ViewBuilder
-    private func circuitPanel(step: Binding<Int>, circuit: ParsedCircuit?) -> some View {
+    private func circuitPanel(step: Binding<Int>, circuit: ParsedCircuit?, parseError: String?) -> some View {
         let isValid = step.wrappedValue >= 0 && step.wrappedValue < trace.steps.count
         let actionName = isValid ? trace.steps[step.wrappedValue].action : "Unknown Action"
 
@@ -131,6 +135,8 @@ struct EvolutionComparisonView: View {
                             rowHeight: rowHeight,
                             defaultColumnWidth: minColumnWidth
                         )
+                    } else if let error = parseError {
+                        ParsingErrorView(error: error)
                     } else {
                         VStack(spacing: 12) {
                             ProgressView()
@@ -197,14 +203,30 @@ struct EvolutionComparisonView: View {
     }
 
     private func loadCurrentCircuit() {
-        if currentStep >= 0 && currentStep < trace.steps.count {
-            currentCircuit = QASMParser.parse(qasm: trace.steps[currentStep].circuitQasm3)
+        guard currentStep >= 0 && currentStep < trace.steps.count else { return }
+
+        withAnimation(.easeInOut(duration: 0.2)) {
+            do {
+                parseErrorCurrentCircuit = nil
+                currentCircuit = try QASMParser.parse(qasm: trace.steps[currentStep].circuitQasm3)
+            } catch {
+                currentCircuit = nil
+                parseErrorCurrentCircuit = error.localizedDescription
+            }
         }
     }
 
     private func loadComparedCircuit() {
-        if comparedStep >= 0 && comparedStep < trace.steps.count {
-            comparedCircuit = QASMParser.parse(qasm: trace.steps[comparedStep].circuitQasm3)
+        guard comparedStep >= 0 && comparedStep < trace.steps.count else { return }
+
+        withAnimation(.easeInOut(duration: 0.2)) {
+            do {
+                parseErrorComparedCircuit = nil
+                comparedCircuit = try QASMParser.parse(qasm: trace.steps[comparedStep].circuitQasm3)
+            } catch {
+                comparedCircuit = nil
+                parseErrorComparedCircuit = error.localizedDescription
+            }
         }
     }
 }

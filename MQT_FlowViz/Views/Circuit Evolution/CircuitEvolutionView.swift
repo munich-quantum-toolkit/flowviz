@@ -10,6 +10,7 @@ struct CircuitEvolutionView: View {
     let trace: CompilationTrace
     let currentStep: Int
     @State var currentCircuit: ParsedCircuit? = nil
+    @State var parseError: String? = nil
 
     var currentActionName: String {
         currentStep >= 0 && currentStep < trace.steps.count ? trace.steps[currentStep].action : "Unknown Action"
@@ -48,6 +49,8 @@ struct CircuitEvolutionView: View {
                             rowHeight: rowHeight,
                             defaultColumnWidth: minColumnWidth
                         )
+                    } else if let error = parseError {
+                        ParsingErrorView(error: error)
                     } else {
                         VStack(spacing: 12) {
                             ProgressView()
@@ -64,26 +67,26 @@ struct CircuitEvolutionView: View {
                         .frame(height: 200)
                     }
                 }
-                .onChange(of: currentStep) { _, newStep in
-                    if newStep >= 0 && newStep < trace.steps.count {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            currentCircuit = QASMParser.parse(qasm: trace.steps[newStep].circuitQasm3)
-                        }
-                    }
-                }
-                .onChange(of: trace) { _, newTrace in
-                    if currentStep >= 0 && currentStep < newTrace.steps.count {
-                        currentCircuit = QASMParser.parse(qasm: newTrace.steps[currentStep].circuitQasm3)
-                    }
-                }
-                .onAppear {
-                    if currentCircuit == nil && currentStep >= 0 && currentStep < trace.steps.count {
-                        currentCircuit = QASMParser.parse(qasm: trace.steps[currentStep].circuitQasm3)
-                    }
-                }
+                .onAppear(perform: loadCircuit)
+                .onChange(of: currentStep) { _, _ in loadCircuit() }
+                .onChange(of: trace) { _, _ in loadCircuit() }
             }
         }
         .contentShape(Rectangle())
+    }
+
+    private func loadCircuit() {
+        guard currentStep >= 0 && currentStep < trace.steps.count else { return }
+
+        withAnimation(.easeInOut(duration: 0.2)) {
+            do {
+                parseError = nil // Reset error state
+                currentCircuit = try QASMParser.parse(qasm: trace.steps[currentStep].circuitQasm3)
+            } catch {
+                currentCircuit = nil
+                parseError = error.localizedDescription
+            }
+        }
     }
 }
 

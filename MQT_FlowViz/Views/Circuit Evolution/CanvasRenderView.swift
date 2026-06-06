@@ -243,7 +243,7 @@ struct CanvasRenderView: View {
     ZStack {
         Color.white
         CanvasRenderView(
-            currentCircuit: QASMParser.parse(qasm: CompilationTrace.previewMock.steps[8].circuitQasm3),
+            currentCircuit: try! QASMParser.parse(qasm: CompilationTrace.previewMock.steps[8].circuitQasm3),
             rowHeight: 40,
             defaultColumnWidth: 40
         )

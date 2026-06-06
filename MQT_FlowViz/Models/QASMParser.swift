@@ -10,18 +10,29 @@ import OSLog
 
 final class QASMParser {
     static let logger: Logger = Logger(subsystem: "QASMParsing", category: "QASMParser")
+    
+    /// Represents possible QASM parsing errors.
+    enum QASMParseError: LocalizedError {
+        case unsupportedVersion(String)
+        case missingQubits(line: Int, instruction: String)
+        case unknownInstruction(line: Int, instruction: String)
 
-    /* Sample QASM String for reference:
-     OPENQASM 3.0;\ninclude \"stdgates.inc\";\nbit[3] meas;\nqubit[127] q;\nrz(-3*pi/2) q[98];\nsx q[98];\nrz(-pi/2) q[98];\nrz(-pi/2) q[99];\nsx q[99];\nrz(4.578679574453913) q[99];\nsx q[99];\nrz(5*pi/2) q[99];\ncx q[98], q[99];\nrz(-pi/2) q[99];\nsx q[99];\nrz(4.578679574453913) q[99];\nsx q[99];\nrz(5*pi/2) q[99];\ncx q[99], q[100];\nmeas[0] = measure q[69];\nmeas[1] = measure q[67];\nmeas[2] = measure q[120];\n
-
-     OPENQASM 3.0;\ninclude \"stdgates.inc\";\nbit[3] meas;\nqubit[3] q;\nh q[2];\ncx q[2], q[1];\ncx q[1], q[0];\nbarrier q[0], q[1], q[2];\nmeas[0] = measure q[0];\nmeas[1] = measure q[1];\nmeas[2] = measure q[2];\n
-
-     OPENQASM 2.0;\ninclude \"qelib1.inc\";\ngate gate_Oracle q0,q1,q2 { x q0; x q1; cx q0,q2; cx q1,q2; x q0; x q1; }\nqreg q[3];\ncreg c[2];\nx q[2];\nh q[2];\nh q[0];\nh q[1];\ngate_Oracle q[0],q[1],q[2];\nh q[0];\nh q[1];\nbarrier q[0],q[1],q[2];\nmeasure q[0] -> c[0];\nmeasure q[1] -> c[1];
-
-     OPENQASM 3.0;\ninclude \"stdgates.inc\";\nbit[6] meas;\nqubit[6] q;\nh q[0];\nrz(pi/2) q[2];\nswap q[1], q[4];\nx q[2];\nx q[3];\nccx q[0], q[2], q[4];\nctrl @ rx(pi) q[0], q[3];\nctrl @ ctrl @ z q[1], q[2], q[5];\nctrl(3) @ h q[0], q[2], q[4], q[5];\ny q[1];\ny q[3];\nctrl @ swap q[0], q[2], q[5];\nbarrier q[0], q[1], q[2], q[3], q[4], q[5];\nmy_custom_gate q[0], q[1];\ncswap q[0], q[2], q[5];\nmeas[0] = measure q[0];\nmeas[5] = measure q[5];\n
-     */
-
-    static func parse(qasm: String) -> ParsedCircuit {
+        var errorDescription: String? {
+            switch self {
+            case .unsupportedVersion(let version):
+                return "Unsupported QASM version: '\(version)'. MQT FlowViz strictly requires OPENQASM 3.0."
+            case .missingQubits(let line, let instruction):
+                return "Syntax Error on line \(line): Expected target qubits for operation '\(instruction)'."
+            case .unknownInstruction(let line, let instruction):
+                return "Parse Error on line \(line): Unrecognized instruction '\(instruction)'."
+            }
+        }
+    }
+    
+    /// Attempts to parse a given string that follows QASM 3.0 format.
+    /// - Parameter qasm: A QASM 3.0 string.
+    /// - Returns: An instance of ``ParsedCircuit`` upon success.
+    static func parse(qasm: String) throws -> ParsedCircuit {
         var operations: [CircuitOperation] = []
         var currentMomentPerWire: [Int: Int] = [:]
 
@@ -29,7 +40,10 @@ final class QASMParser {
         var isInsideGateDefinition = false
 
         // MARK: - General Parsing
-        for line in lines {
+        for (index, line) in lines.enumerated() {
+            // used for error messages
+            let lineNumber = index + 1
+
             // 1) Skip custom gate definition blocks
             if line.hasPrefix("gate ") && line.contains("{") && line.contains("}") { continue }
             if line.hasPrefix("gate ") && line.contains("{") && !line.contains("}") {
@@ -42,8 +56,18 @@ final class QASMParser {
             }
             if isInsideGateDefinition { continue }
 
+            if line.hasPrefix("OPENQASM") {
+                guard line.contains("3.0") else {
+                    throw QASMParseError.unsupportedVersion(line)
+                }
+                continue
+            }
+
             // 2) Skip comments, headers, and Qubit Declarations!
-            guard !line.isEmpty, !line.hasPrefix("//"), !line.hasPrefix("OPENQASM"), !line.hasPrefix("include"), !line.hasPrefix("qubit["), !line.hasPrefix("qreg ") else { continue }
+            guard !line.isEmpty, !line.hasPrefix("//"), !line.hasPrefix("OPENQASM"),
+                  !line.hasPrefix("include"), !line.hasPrefix("qubit["), !line.hasPrefix("qreg "),
+                  !line.hasPrefix("bit["), !line.hasPrefix("creg ")
+            else { continue }
 
             // 3) Handle Measurement Operations
             if line.contains("measure") {
@@ -56,8 +80,8 @@ final class QASMParser {
                     currentMomentPerWire[qBit] = moment + 1
                     continue
                 }
-                logger.warning("[MEASURE] - Could not parse suspected measurement instruction: \(line)")
-                continue
+                logger.error("[MEASURE] - Could not parse suspected measurement instruction: \(line)")
+                throw QASMParseError.unknownInstruction(line: lineNumber, instruction: line)
             }
 
             // 4) Handle Barrier Operations
@@ -66,9 +90,16 @@ final class QASMParser {
                 if !qubits.isEmpty {
                     let maxMoment = qubits.compactMap { currentMomentPerWire[$0] }.max() ?? 0
                     operations.append(CircuitOperation(type: .barrier(qubits: qubits), momentIndex: maxMoment))
-
                     // Push all involved wires to the same timeline position
                     for q in qubits { currentMomentPerWire[q] = maxMoment + 1 }
+                } else {
+                    // No qubits specified implies global barrier across all active qubits
+                    let allKnownQubits = Array(currentMomentPerWire.keys)
+                    if !allKnownQubits.isEmpty {
+                        let maxMoment = allKnownQubits.compactMap { currentMomentPerWire[$0] }.max() ?? 0
+                        operations.append(CircuitOperation(type: .barrier(qubits: allKnownQubits), momentIndex: maxMoment))
+                        for q in allKnownQubits { currentMomentPerWire[q] = maxMoment + 1 }
+                    }
                 }
                 continue
             }
@@ -82,12 +113,15 @@ final class QASMParser {
             let rawGateIdentifier = String(cleanLine[..<gateIdentifierEndIndex]).trimmingCharacters(in: .whitespaces)
 
             guard !rawGateIdentifier.isEmpty else {
-                logger.warning("Could not extract raw gate identifier for line: \(line)")
-                continue
+                logger.error("Could not extract raw gate identifier for line: \(line)")
+                throw QASMParseError.unknownInstruction(line: lineNumber, instruction: line)
             }
 
             let involvedQubits = extractAllQubitIntegers(from: cleanLine)
-            guard !involvedQubits.isEmpty else { continue }
+            guard !involvedQubits.isEmpty else {
+                logger.error("[GATE] - No qubits found in gate: \(rawGateIdentifier), in line: \(line)")
+                throw QASMParseError.missingQubits(line: lineNumber, instruction: rawGateIdentifier)
+            }
 
             // --- OBTAIN CONTROL/TARGET QUBITS ---
             var numControls = 0
