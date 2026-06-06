@@ -11,14 +11,13 @@ import UniformTypeIdentifiers
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \CompilationTrace.circuitName) private var traces: [CompilationTrace]
     @State private var dataHandler = DataHandler()
     @State private var selectedTrace: CompilationTrace?
     @State private var isShowingFilePicker = false
 
     var body: some View {
         NavigationSplitView {
-            NavigationListView(traces: traces, selectedTrace: $selectedTrace, isShowingFilePicker: $isShowingFilePicker)
+            NavigationListView(selectedTrace: $selectedTrace, isShowingFilePicker: $isShowingFilePicker)
         } detail: {
             NavigationStack {
                 if let selected = selectedTrace {

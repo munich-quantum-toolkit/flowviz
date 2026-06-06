@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct NavigationListView: View {
-    let traces: [CompilationTrace]
+    @Query(sort: \CompilationTrace.circuitName) private var traces: [CompilationTrace]
     @State private var searchText: String = ""
     @Binding var selectedTrace: CompilationTrace?
     @Binding var isShowingFilePicker: Bool
@@ -69,26 +69,25 @@ struct NavigationListView: View {
     private func delete(at index: Int) {
         let traceToDelete = filteredTraces[index]
 
-        withAnimation(.easeInOut(duration: 0.25)) {
-            // Only shift selection if the user is deleting the item they are currently viewing
-            if traceToDelete == selectedTrace {
-                if filteredTraces.count > 1 {
-                    let nextIndex = (index < filteredTraces.count - 1) ? index + 1 : index - 1
-                    selectedTrace = filteredTraces[nextIndex]
-                } else {
-                    selectedTrace = nil
-                }
+        // Only shift selection if the user is deleting the item they are currently viewing
+        if traceToDelete == selectedTrace {
+            if filteredTraces.count > 1 {
+                let nextIndex = (index < filteredTraces.count - 1) ? index + 1 : index - 1
+                selectedTrace = filteredTraces[nextIndex]
+            } else {
+                selectedTrace = nil
             }
-            
-            modelContext.delete(traceToDelete)
         }
+
+        modelContext.delete(traceToDelete)
+        try? modelContext.save()
     }
 }
 
 #Preview {
     @Previewable @State var selectedTrace: CompilationTrace?
     NavigationSplitView {
-        NavigationListView(traces: [CompilationTrace.previewMock], selectedTrace: $selectedTrace, isShowingFilePicker: .constant(false))
+        NavigationListView(selectedTrace: $selectedTrace, isShowingFilePicker: .constant(false))
     } detail: {
         PlaceholderView()
     }
