@@ -75,22 +75,49 @@ final class CompilationTrace: Codable, Identifiable {
 
         let sortedSteps = steps.sorted { $0.stepIndex < $1.stepIndex }
 
+        var actionRanges: [String: [ClosedRange<Int>]] = [:]
+        var currentStarts: [String: Int] = [:]
+        var previousIndices: [String: Int] = [:]
         var orderedActions: [String] = []
-        var seenActions: Set<String> = []
 
         for step in sortedSteps {
-            if !seenActions.contains(step.action) {
-                seenActions.insert(step.action)
-                orderedActions.append(step.action)
+            let action = step.action
+
+            // Register action on first appearance
+            if actionRanges[action] == nil {
+                orderedActions.append(action)
+                actionRanges[action] = []
             }
+
+            // Extract current range tracking state
+            var ranges = actionRanges[action]!
+            var start = currentStarts[action]
+            var prev = previousIndices[action]
+
+            // Process the step w.r.t. the current action as active
+            processStepForRange(isActive: true, stepIndex: step.stepIndex, ranges: &ranges, start: &start, prev: &prev)
+
+            // Save tracking state back to dictionaries
+            actionRanges[action] = ranges
+            currentStarts[action] = start
+            previousIndices[action] = prev
         }
 
-        return orderedActions.enumerated().map { index, actionName in
-            let actionRanges = extractRanges(where: { $0.action == actionName }, in: sortedSteps)
+        // Close any remaining open ranges that were still active after reaching the end of the array
+        for action in orderedActions {
+            var ranges = actionRanges[action]!
+            var start = currentStarts[action]
+            var prev = previousIndices[action]
 
-            return TimelineSequence(
-                title: actionName,
-                stepRanges: actionRanges,
+            // Setting isActive to false causes the helper to close any active range
+            processStepForRange(isActive: false, stepIndex: 0, ranges: &ranges, start: &start, prev: &prev)
+            actionRanges[action] = ranges
+        }
+
+        return orderedActions.map { action in
+            TimelineSequence(
+                title: action,
+                stepRanges: actionRanges[action] ?? [],
                 backgroundColor: Color.blueBackground,
                 textColor: Color.bluePrimary
             )
@@ -104,59 +131,49 @@ final class CompilationTrace: Codable, Identifiable {
 
         let sortedSteps = steps.sorted { $0.stepIndex < $1.stepIndex }
 
-        let synthesizedRanges = extractRanges(where: { $0.synthesized }, in: sortedSteps)
-        let laidOutRanges = extractRanges(where: { $0.laidOut }, in: sortedSteps)
-        let routedRanges = extractRanges(where: { $0.routed }, in: sortedSteps)
+        var synRanges: [ClosedRange<Int>] = []
+        var laidRanges: [ClosedRange<Int>] = []
+        var routRanges: [ClosedRange<Int>] = []
 
-        return (synthesizedRanges, laidOutRanges, routedRanges)
-    }
-    
-    /// Extracts ranges from the compilation trace during which a certain condition is fulfilled.
-    /// - Parameters:
-    ///   - condition: The condition to check for.
-    ///   - sortedSteps: An array of sorted compilation steps.
-    /// - Returns: Ranges of compilation steps during which the condition is fulfilled.
-    private func extractRanges(where condition: (CompilationStep) -> Bool, in sortedSteps: [CompilationStep]) -> [ClosedRange<Int>] {
-        var ranges: [ClosedRange<Int>] = []
-        var currentStart: Int? = nil
-        var previousIndex: Int? = nil
+        // The active range trackers
+        var synStart: Int? = nil, synPrev: Int? = nil
+        var laidStart: Int? = nil, laidPrev: Int? = nil
+        var routStart: Int? = nil, routPrev: Int? = nil
 
         for step in sortedSteps {
-            let isTrue = condition(step)
-
-            let isContiguous: Bool
-            if let prev = previousIndex {
-                isContiguous = (step.stepIndex == prev + 1)
-            } else {
-                isContiguous = true
-            }
-
-            if isTrue {
-                if currentStart == nil {
-                    // Start new range
-                    currentStart = step.stepIndex
-                } else if !isContiguous {
-                    // Close the range & start new one
-                    if let start = currentStart, let prev = previousIndex {
-                        ranges.append(start...prev)
-                    }
-                    currentStart = step.stepIndex
-                }
-            } else {
-                // Boolean flipped to false, close the active range
-                if let start = currentStart, let prev = previousIndex {
-                    ranges.append(start...prev)
-                    currentStart = nil
-                }
-            }
-            previousIndex = step.stepIndex
+            let idx = step.stepIndex
+            processStepForRange(isActive: step.synthesized, stepIndex: idx, ranges: &synRanges, start: &synStart, prev: &synPrev)
+            processStepForRange(isActive: step.laidOut, stepIndex: idx, ranges: &laidRanges, start: &laidStart, prev: &laidPrev)
+            processStepForRange(isActive: step.routed, stepIndex: idx, ranges: &routRanges, start: &routStart, prev: &routPrev)
         }
 
-        // Close any active range at the end
-        if let start = currentStart, let prev = previousIndex {
-            ranges.append(start...prev)
-        }
+        // Close any remaining open ranges that were still active after reaching the end of the array
+        // Setting isActive to false causes the helper to close any active range
+        processStepForRange(isActive: false, stepIndex: 0, ranges: &synRanges, start: &synStart, prev: &synPrev)
+        processStepForRange(isActive: false, stepIndex: 0, ranges: &laidRanges, start: &laidStart, prev: &laidPrev)
+        processStepForRange(isActive: false, stepIndex: 0, ranges: &routRanges, start: &routStart, prev: &routPrev)
 
-        return ranges
+        return (synRanges, laidRanges, routRanges)
+    }
+
+    // helper to cleanly process the ranges
+    private func processStepForRange(isActive: Bool, stepIndex: Int, ranges: inout [ClosedRange<Int>], start: inout Int?, prev: inout Int?) {
+        let isContiguous = (prev == nil) || (stepIndex == prev! + 1)
+
+        if isActive {
+            if start == nil {
+                start = stepIndex // Open a new range
+            } else if !isContiguous {
+                // Close old range and open a new one
+                ranges.append(start!...prev!)
+                start = stepIndex
+            }
+        } else {
+            if let s = start, let p = prev {
+                ranges.append(s...p) // Condition turned false, close the active range
+                start = nil
+            }
+        }
+        prev = stepIndex
     }
 }

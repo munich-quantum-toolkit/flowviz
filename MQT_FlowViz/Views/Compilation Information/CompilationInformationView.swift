@@ -61,24 +61,19 @@ struct CompilationInformationView: View {
             .aspectRatio(3.1, contentMode: .fit)
         }
         .task(id: trace.id) {
-            var tempParallelism: [ChartDataPoint] = []
-            var tempEntanglement: [ChartDataPoint] = []
-            var tempLiveness: [ChartDataPoint] = []
-            var tempQubits: [ChartDataPoint] = []
-            var tempReward: [ChartDataPoint] = []
-            var tempDepth: [ChartDataPoint] = []
+            parallelismData = trace.steps.map { ChartDataPoint(step: $0.stepIndex, value: Float($0.parallelism)) }
+            entanglementData = trace.steps.map { ChartDataPoint(step: $0.stepIndex, value: Float($0.entanglementRatio)) }
+            livenessData = trace.steps.map { ChartDataPoint(step: $0.stepIndex, value: Float($0.liveness)) }
+            qubitsData = trace.steps.map { ChartDataPoint(step: $0.stepIndex, value: Float($0.numQubits)) }
+            rewardData = trace.steps.map { ChartDataPoint(step: $0.stepIndex, value: Float($0.reward)) }
+            depthData = trace.steps.map { ChartDataPoint(step: $0.stepIndex, value: Float($0.rawCriticalDepth)) }
+
             var tempExpectedFidelity: [ChartDataPoint] = []
             var tempCriticalDepth: [ChartDataPoint] = []
             var tempHellingerDistance: [ChartDataPoint?] = []
             var tempEstimatedSuccessProbability: [ChartDataPoint?] = []
 
             let count = trace.steps.count
-            tempParallelism.reserveCapacity(count)
-            tempEntanglement.reserveCapacity(count)
-            tempLiveness.reserveCapacity(count)
-            tempQubits.reserveCapacity(count)
-            tempReward.reserveCapacity(count)
-            tempDepth.reserveCapacity(count)
             tempExpectedFidelity.reserveCapacity(count)
             tempCriticalDepth.reserveCapacity(count)
             tempHellingerDistance.reserveCapacity(count)
@@ -86,13 +81,6 @@ struct CompilationInformationView: View {
 
             for step in trace.steps {
                 let index = step.stepIndex
-
-                tempParallelism.append(ChartDataPoint(step: index, value: Float(step.parallelism)))
-                tempEntanglement.append(ChartDataPoint(step: index, value: Float(step.entanglementRatio)))
-                tempLiveness.append(ChartDataPoint(step: index, value: Float(step.liveness)))
-                tempQubits.append(ChartDataPoint(step: index, value: Float(step.numQubits)))
-                tempReward.append(ChartDataPoint(step: index, value: Float(step.reward)))
-                tempDepth.append(ChartDataPoint(step: index, value: Float(step.rawCriticalDepth)))
 
                 let fidelity = step.figuresOfMerit.expectedFidelity
                 tempExpectedFidelity.append(ChartDataPoint(step: index, value: Float(fidelity.value), tentative: fidelity.tentative))
@@ -112,13 +100,6 @@ struct CompilationInformationView: View {
                     tempHellingerDistance.append(nil)
                 }
             }
-
-            parallelismData = tempParallelism
-            entanglementData = tempEntanglement
-            livenessData = tempLiveness
-            qubitsData = tempQubits
-            rewardData = tempReward
-            depthData = tempDepth
 
             var tempFOMSeries = [
                 ChartDataSet(name: "Expected Fidelity", color: Color.bluePrimary, data: tempExpectedFidelity),

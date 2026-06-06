@@ -10,7 +10,7 @@ import SwiftUI
 struct CompilationPipelineView: View {
     let trace: CompilationTrace
     @Binding var selectedStep: Int
-    let timelines: [TimelineSequence]
+    @State private var timelines: [TimelineSequence] = []
     let collapsedCount = 6
 
     @State var expandedPipeline: Bool = false
@@ -18,7 +18,6 @@ struct CompilationPipelineView: View {
     init(trace: CompilationTrace, selectedStep: Binding<Int>) {
         self.trace = trace
         self._selectedStep = selectedStep
-        self.timelines = trace.getActionEvolution()
     }
 
     var body: some View {
@@ -41,6 +40,12 @@ struct CompilationPipelineView: View {
                     }
                     .buttonStyle(.plain)
                 }
+            }
+        }
+        .task(id: trace.id) {
+            let loadedTimelines = trace.getActionEvolution()
+            await MainActor.run {
+                self.timelines = loadedTimelines
             }
         }
     }

@@ -10,34 +10,11 @@ import SwiftUI
 struct MDPEvolutionView: View {
     let trace: CompilationTrace
     @Binding var selectedStep: Int
-    let timelines: [TimelineSequence]
+    @State var timelines: [TimelineSequence] = []
 
     init(trace: CompilationTrace, selectedStep: Binding<Int>) {
         self.trace = trace
         self._selectedStep = selectedStep
-
-        let (synthesizedRanges, laidOutRanges, routedRanges) = trace.getMDPStateEvolution()
-
-        self.timelines = [
-            TimelineSequence(
-                title: "Synthesized",
-                stepRanges: synthesizedRanges,
-                backgroundColor: Color.redBackground,
-                textColor: Color.redPrimary
-            ),
-            TimelineSequence(
-                title: "Laid Out",
-                stepRanges: laidOutRanges,
-                backgroundColor: Color.yellowBackground,
-                textColor: Color.yellowPrimary
-            ),
-            TimelineSequence(
-                title: "Routed",
-                stepRanges: routedRanges,
-                backgroundColor: Color.greenBackground,
-                textColor: Color.greenPrimary
-            )
-        ]
     }
 
     var body: some View {
@@ -47,6 +24,32 @@ struct MDPEvolutionView: View {
 
             DashboardCardView(title: "Circuit State") {
                 TimelineView(sequences: timelines, highlightedStep: $selectedStep)
+            }
+        }
+        .task {
+            let (synthesizedRanges, laidOutRanges, routedRanges) = trace.getMDPStateEvolution()
+
+            await MainActor.run {
+                self.timelines = [
+                    TimelineSequence(
+                        title: "Synthesized",
+                        stepRanges: synthesizedRanges,
+                        backgroundColor: Color.redBackground,
+                        textColor: Color.redPrimary
+                    ),
+                    TimelineSequence(
+                        title: "Laid Out",
+                        stepRanges: laidOutRanges,
+                        backgroundColor: Color.yellowBackground,
+                        textColor: Color.yellowPrimary
+                    ),
+                    TimelineSequence(
+                        title: "Routed",
+                        stepRanges: routedRanges,
+                        backgroundColor: Color.greenBackground,
+                        textColor: Color.greenPrimary
+                    )
+                ]
             }
         }
     }
