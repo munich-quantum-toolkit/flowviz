@@ -17,60 +17,49 @@ struct GraphBoxView: View {
     let chartMaxValue: Float
     let chartMinValue: Float
 
-    private let stepDataMap: [Int: [(name: String, color: Color, value: Float, tentative: Bool)]]
+    private let stepDataMap: [Int: [PlottableDataPoint]]
+    private let flatData: [PlottableDataPoint]
 
     init(title: String, seriesData: [ChartDataSet]) {
         self.title = title
         self.seriesData = seriesData
 
-        self.chartDomain = seriesData.map { $0.name }
-        self.chartColorRange = seriesData.map { $0.color }
+        let flattened = seriesData.flattenedForPlotting()
+        self.flatData = flattened
 
-        var localMax: Float = -Float.greatestFiniteMagnitude
-        var localMin: Float = Float.greatestFiniteMagnitude
-        var dict: [Int: [(name: String, color: Color, value: Float, tentative: Bool)]] = [:]
+        self.chartDomain = seriesData.map(\.name)
+        self.chartColorRange = seriesData.map(\.color)
 
-        for series in seriesData {
-            for point in series.data {
-                if point.value > localMax { localMax = point.value }
-                if point.value < localMin { localMin = point.value }
+        let allValues = flattened.map(\.value)
+        self.chartMaxValue = allValues.max() ?? 1.0
+        self.chartMinValue = allValues.min() ?? 0.0
 
-                // build the tooltip dictionary grouping by step
-                let info = (series.name, series.color, point.value, point.tentative)
-                dict[point.step, default: []].append(info)
-            }
-        }
-
-        self.chartMaxValue = localMax == -Float.greatestFiniteMagnitude ? 1.0 : localMax
-        self.chartMinValue = localMin == Float.greatestFiniteMagnitude ? 0.0 : localMin
-        self.stepDataMap = dict
+        self.stepDataMap = Dictionary(grouping: flattened, by: \.step)
     }
 
     init(title: String, chartData: [ChartDataPoint], chartColor: Color) {
-        // Note: This initializer is just for plotting a single dataset. The chart will not display a legend, which is why
-        // the name value passed to the initializer of ChartDataSet does not have any effect.
         self.init(title: title, seriesData: [ChartDataSet(name: title, color: chartColor, data: chartData)])
     }
 
     var body: some View {
         DashboardCardView(title: title) {
             Chart {
-                ForEach(seriesData) { series in
-                    ForEach(series.data) { dataPoint in
-                        LineMark(
-                            x: .value("Step", dataPoint.step),
-                            y: .value("Value", dataPoint.value)
-                        )
+                LinePlot(
+                    flatData,
+                     x: .value("Step", \PlottableDataPoint.step),
+                     y: .value("Value", \PlottableDataPoint.value),
+                     series: .value("Series", \PlottableDataPoint.seriesName)
+                )
+                .foregroundStyle(by: .value("Series", \PlottableDataPoint.seriesName))
+                .interpolationMethod(.monotone)
 
-                        PointMark(
-                            x: .value("Step", dataPoint.step),
-                            y: .value("Value", dataPoint.value)
-                        )
-                        .symbol(dataPoint.tentative ? .cross : .circle)
-                    }
-                    .interpolationMethod(.monotone)
-                    .foregroundStyle(by: .value("Series", series.name))
-                }
+                PointPlot(
+                    flatData,
+                    x: .value("Step", \.step),
+                    y: .value("Value", \.value)
+                )
+                .foregroundStyle(by: .value("Series", \PlottableDataPoint.seriesName))
+                .symbol(by: .value("State", \PlottableDataPoint.symbolState))
 
                 // Tooltip for selected step
                 if let step = selectedStep {
@@ -83,7 +72,6 @@ struct GraphBoxView: View {
                     .zIndex(-1)
 
                     let currentData = stepDataMap[step] ?? []
-
                     let stepMax = currentData.map { $0.value }.max() ?? 0
                     let stepMin = currentData.map { $0.value }.min() ?? 0
                     let stepMidpoint = (stepMax + stepMin) / 2.0
@@ -112,15 +100,15 @@ struct GraphBoxView: View {
                         overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))
                     ) {
                         VStack(alignment: .leading, spacing: 4) {
-                            ForEach(currentData, id: \.name) { item in
+                            ForEach(currentData) { item in
                                 HStack(spacing: 6) {
                                     if item.tentative {
                                         BasicChartSymbolShape.cross
-                                            .fill(item.color)
+                                            .fill(item.seriesColor)
                                             .frame(width: 8, height: 8)
                                     } else {
                                         BasicChartSymbolShape.circle
-                                            .fill(item.color)
+                                            .fill(item.seriesColor)
                                             .frame(width: 8, height: 8)
                                     }
 
@@ -142,7 +130,30 @@ struct GraphBoxView: View {
                 }
             }
             .chartForegroundStyleScale(domain: chartDomain, range: chartColorRange)
+            .chartSymbolScale([
+                "Tentative": BasicChartSymbolShape.cross,
+                "Final": BasicChartSymbolShape.circle
+            ])
             .chartLegend(seriesData.count > 1 ? .visible : .hidden)
+            .chartLegend(position: .bottom, alignment: .leading) {
+                // Custom legend to prevent Charts library from creating entries for "Tentative" and "Final" as well
+                if seriesData.count > 1 {
+                    HStack(spacing: 16) {
+                        ForEach(seriesData, id: \.name) { series in
+                            HStack(spacing: 6) {
+                                Circle()
+                                    .fill(series.color)
+                                    .frame(width: 8, height: 8)
+
+                                Text(series.name)
+                                    .font(.caption)
+                                    .foregroundStyle(.gray)
+                            }
+                        }
+                    }
+                    .padding(.top, 4)
+                }
+            }
             .chartYAxis {
                 AxisMarks(values: .automatic(desiredCount: 5))
             }
