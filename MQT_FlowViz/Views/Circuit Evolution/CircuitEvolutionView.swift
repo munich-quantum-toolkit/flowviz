@@ -26,8 +26,19 @@ struct CircuitEvolutionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            Text("Circuit Evolution")
-                .font(.title2.bold())
+            HStack {
+                Text("Circuit Evolution")
+                    .font(.title2.bold())
+
+                Spacer()
+
+                NavigationLink(destination: EvolutionComparisonView(trace: trace, currentStep: currentStep)) {
+                    Text("Compare Evolutions \(Image(systemName: "arrow.right"))")
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(Color.bluePrimary)
+                }
+                .buttonStyle(.plain)
+            }
 
             DashboardCardView(title: currentActionName) {
                 VStack(alignment: .center, spacing: 16) {
@@ -71,7 +82,6 @@ struct CircuitEvolutionView: View {
                     }
                 }
             }
-            .clipped()
         }
         .contentShape(Rectangle())
     }

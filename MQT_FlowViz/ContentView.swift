@@ -20,19 +20,23 @@ struct ContentView: View {
         NavigationSplitView {
             NavigationListView(traces: traces, selectedTrace: $selectedTrace, isShowingFilePicker: $isShowingFilePicker)
         } detail: {
-            if let selected = selectedTrace {
-                NavigationDetailView(currentTrace: selected)
-                    .background(Color.grayBackground)
-                    #if os(iOS)
-                    .navigationBarTitleDisplayMode(.inline)
-                    #endif
-            } else {
-                PlaceholderView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.grayBackground)
-                    #if os(macOS)
-                    .toolbarBackground(.hidden, for: .windowToolbar)
-                    #endif
+            NavigationStack {
+                if let selected = selectedTrace {
+                    NavigationDetailView(currentTrace: selected)
+                        .background(Color.grayBackground)
+                        #if os(iOS)
+                        .navigationBarTitleDisplayMode(.inline)
+                        #else
+                        .toolbarBackground(.hidden, for: .windowToolbar)
+                        #endif
+                } else {
+                    PlaceholderView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color.grayBackground)
+                        #if os(macOS)
+                        .toolbarBackground(.hidden, for: .windowToolbar)
+                        #endif
+                }
             }
         }
         .fileImporter(

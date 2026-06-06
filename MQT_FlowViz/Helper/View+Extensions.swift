@@ -19,4 +19,13 @@ extension View {
             }
         )
     }
+
+    @ViewBuilder
+    func conditionalKeyboardShortcut(_ key: KeyEquivalent, modifiers: EventModifiers = [], isEnabled: Bool) -> some View {
+        if isEnabled {
+            self.keyboardShortcut(key, modifiers: modifiers)
+        } else {
+            self
+        }
+    }
 }

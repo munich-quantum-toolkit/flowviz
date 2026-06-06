@@ -8,6 +8,7 @@ import SwiftUI
 
 struct ActionStepperView: View {
     let totalSteps: Int
+    var enableKeyboardShortcuts: Bool = true
     @Binding var currentStep: Int
 
     @State private var stepInput: Int?
@@ -30,7 +31,7 @@ struct ActionStepperView: View {
             }
             .buttonStyle(.borderless)
             .disabled(currentStep == 0)
-            .keyboardShortcut(.leftArrow, modifiers: [])
+            .conditionalKeyboardShortcut(.leftArrow, isEnabled: enableKeyboardShortcuts)
 
             // --- TEXT INPUT ---
             HStack(spacing: 8) {
@@ -86,7 +87,7 @@ struct ActionStepperView: View {
             }
             .buttonStyle(.borderless)
             .disabled(currentStep == totalSteps - 1)
-            .keyboardShortcut(.rightArrow, modifiers: [])
+            .conditionalKeyboardShortcut(.rightArrow, isEnabled: enableKeyboardShortcuts)
         }
         .fixedSize(horizontal: true, vertical: false)
     }
