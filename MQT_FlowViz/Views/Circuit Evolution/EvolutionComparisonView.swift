@@ -102,7 +102,7 @@ struct EvolutionComparisonView: View {
                             let currentStep = trace.steps[step.wrappedValue]
 
                             Label("\(parsed.operations.count) Ops", systemImage: "cpu")
-                            Label("\(currentStep.numQubits) Qubits", systemImage: "memorychip")
+                            Label("\(currentStep.numQubits) Qubits", systemImage: "circle.dotted.and.circle")
                             Label(String(format: "Depth %.2f", currentStep.rawCriticalDepth), systemImage: "arrow.down.to.line.compact")
                             Label(String(format: "Parallelism %.2f", currentStep.parallelism), systemImage: "square.grid.2x2")
                             Label(String(format: "Liveness %.2f", currentStep.liveness), systemImage: "waveform.path.ecg")

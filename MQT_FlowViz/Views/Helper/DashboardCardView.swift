@@ -27,8 +27,8 @@ struct DashboardCardView<Content: View>: View {
             
             content
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
         // Tonal Contrast: Pure white card
         .background(.white)
         .cornerRadius(12)

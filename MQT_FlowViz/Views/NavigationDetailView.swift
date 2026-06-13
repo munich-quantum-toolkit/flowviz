@@ -14,7 +14,7 @@ struct NavigationDetailView: View {
     var body: some View {
         ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: 24) {
-                DeviceInformationView(deviceData: currentTrace.device)
+                CompilationOverviewView(trace: currentTrace)
                 CompilationInformationView(trace: currentTrace)
                 CircuitEvolutionView(trace: currentTrace, currentStep: selectedStep)
                 CompilationPipelineView(trace: currentTrace, selectedStep: $selectedStep)
