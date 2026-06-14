@@ -9715,7 +9715,7 @@
             "laid_out": false,
             "routed": false,
             "is_terminal": false,
-            "circuit_qasm3": "OPENQASM 3.0;\ninclude \"stdgates.inc\";\nbit[6] meas;\nqubit[6] q;\nh q[0];\nrz(pi/2) q[2];\nswap q[1], q[4];\nx q[2];\nx q[3];\nccx q[0], q[2], q[4];\nctrl @ rx(pi) q[0], q[3];\nctrl @ ctrl @ z q[1], q[2], q[5];\nctrl(3) @ h q[0], q[2], q[4], q[5];\ny q[1];\ny q[3];\nctrl @ swap q[0], q[2], q[5];\nbarrier q[0], q[1], q[2], q[3], q[4], q[5];\nmy_custom_gate q[0], q[1];\ncswap q[0], q[2], q[5];\nmeas[0] = measure q[0];\nmeas[5] = measure q[5];\n",
+            "circuit_qasm3": "OPENQASM 3.0;\ninclude \"stdgates.inc\";\nbit[4] c;\nqubit[8] q;\n\n// 1. Custom gate definition (Parser should skip this entire block)\ngate my_custom_h a {\n    u(pi/2, 0, pi) a;\n}\n\n// 2. Standard single-qubit gates with various parameter formats\nh q[0];\nrx(1.57079632679) q[1];\nrz(-pi/2) q[2];\n\n// 3. Specific barrier\nbarrier q[0], q[1], q[2];\n\n// 4. Standard multi-qubit gates\ncx q[0], q[1];\nccx q[0], q[1], q[2];\ncswap q[2], q[3], q[4];\n\n// 5. QASM 3.0 Modifiers (Testing your dynamic control counting)\nctrl @ x q[4], q[5];\nctrl(3) @ rx(pi) q[0], q[1], q[2], q[5], q[6];\nctrl @ ctrl @ z q[5], q[6], q[7];\n\n// 6. Global barrier (Should map to all known active wires)\nbarrier;\n\n// 7. Measurements\nc[0] = measure q[0];\nc[1] = measure q[7];\n",
             "program_communication": 0.6666666865348816,
             "raw_critical_depth": 1.0,
             "entanglement_ratio": 0.6666666865348816,
@@ -9753,7 +9753,7 @@
             "laid_out": false,
             "routed": false,
             "is_terminal": false,
-            "circuit_qasm3": "OPENQASM 3.0;\ninclude \"stdgates.inc\";\nbit[3] meas;\nqubit[3] q;\nh q[2];\ncx q[2], q[1];\ncx q[1], q[0];\nbarrier q[0], q[1], q[2];\nmeas[0] = measure q[0];\nmeas[1] = measure q[1];\nmeas[2] = measure q[2];\n",
+            "circuit_qasm3": "OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[3];\ncreg c[3];\n\nh q[0];\ncx q[0], q[1];\nmeasure q[0] -> c[0];\n",
             "program_communication": 0.6666666865348816,
             "raw_critical_depth": 1.0,
             "entanglement_ratio": 0.6666666865348816,
@@ -9791,7 +9791,7 @@
             "laid_out": false,
             "routed": false,
             "is_terminal": false,
-            "circuit_qasm3": "OPENQASM 3.0;\ninclude \"stdgates.inc\";\nbit[3] meas;\nqubit[3] q;\nh q[2];\ncx q[2], q[1];\ncx q[1], q[0];\nbarrier q[0], q[1], q[2];\nmeas[0] = measure q[0];\nmeas[1] = measure q[1];\nmeas[2] = measure q[2];\n",
+            "circuit_qasm3": "OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\n\nh q[0];\ncx;\nx q[1];\n",
             "program_communication": 0.6666666865348816,
             "raw_critical_depth": 1.0,
             "entanglement_ratio": 0.6666666865348816,
@@ -9829,7 +9829,7 @@
             "laid_out": false,
             "routed": false,
             "is_terminal": false,
-            "circuit_qasm3": "OPENQASM 3.0;\ninclude \"stdgates.inc\";\nbit[3] meas;\nqubit[3] q;\nh q[2];\ncx q[2], q[1];\ncx q[1], q[0];\nbarrier q[0], q[1], q[2];\nmeas[0] = measure q[0];\nmeas[1] = measure q[1];\nmeas[2] = measure q[2];\n",
+            "circuit_qasm3": "OPENQASM 3.0;\ninclude \"stdgates.inc\";\nqubit[2] q;\n\nq[0];\nmeas[0] = measure q0;\n",
             "program_communication": 0.6666666865348816,
             "raw_critical_depth": 1.0,
             "entanglement_ratio": 0.6666666865348816,
@@ -13320,12 +13320,12 @@
                     "kind": "exact"
                 },
                 "critical_depth": {
-                    "value": 0.0,
+                    "value": 0.3,
                     "kind": "exact"
                 },
                 "hellinger_distance": null,
                 "success_probability": {
-                    "value": 0.0,
+                    "value": 0.89,
                     "kind": "exact"
                 }
             },
@@ -13337,8 +13337,8 @@
             "program_communication": 0.0002499687543604523,
             "raw_critical_depth": 1.0,
             "entanglement_ratio": 0.13333334028720856,
-            "parallelism": 0.0019841270986944437,
-            "liveness": 0.01312335953116417
+            "parallelism": 0.19841270986944437,
+            "liveness": 0.1312335953116417
         }
     ]
 }

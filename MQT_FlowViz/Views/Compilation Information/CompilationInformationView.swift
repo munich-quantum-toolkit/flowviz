@@ -9,8 +9,6 @@ import SwiftUI
 struct CompilationInformationView: View {
     let trace: CompilationTrace
 
-    @State private var selectedStep: Int? = nil
-
     @State private var parallelismData: [ChartDataPoint] = []
     @State private var entanglementData: [ChartDataPoint] = []
     @State private var livenessData: [ChartDataPoint] = []
@@ -30,8 +28,8 @@ struct CompilationInformationView: View {
             Text("Compilation Information")
                 .font(.title2.bold())
 
-            Grid(horizontalSpacing: 16, verticalSpacing: 16) {
-                GridRow {
+            VStack(spacing: 16) {
+                HStack(spacing: 16) {
                     GraphBoxView(title: "Parallelism", chartData: parallelismData, chartColor: Color.bluePrimary)
                         .aspectRatio(1, contentMode: .fit)
 
@@ -42,7 +40,7 @@ struct CompilationInformationView: View {
                         .aspectRatio(1, contentMode: .fit)
                 }
 
-                GridRow {
+                HStack(spacing: 16) {
                     GraphBoxView(title: "Used Qubits", chartData: qubitsData, chartColor: Color.bluePrimary)
                         .aspectRatio(1, contentMode: .fit)
 
