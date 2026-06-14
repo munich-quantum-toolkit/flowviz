@@ -133,18 +133,26 @@ struct DeltaRowView: View {
         IconizedRowView(icon: icon, title: title) {
             HStack(spacing: 12) {
                 if let initial = initialValue {
-                    BoxedTextView(text: initial)
+                    Text(initial)
+                        .font(.caption.bold())
+                        .foregroundStyle(.bluePrimary)
+                        .padding(6)
+                        .frame(minWidth: 35)
+                        .background(.blueBackground)
+                        .cornerRadius(8)
 
                     Image(systemName: "arrow.right")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(Color.bluePrimary)
                 }
 
-                BoxedTextView(
-                    text: finalValue,
-                    backgroundColor: boxColors.backgroundColor,
-                    textColor: boxColors.textColor
-                )
+                Text(finalValue)
+                    .font(.caption.bold())
+                    .foregroundStyle(boxColors.textColor)
+                    .padding(6)
+                    .frame(width: 35)
+                    .background(boxColors.backgroundColor)
+                    .cornerRadius(8)
             }
         }
     }

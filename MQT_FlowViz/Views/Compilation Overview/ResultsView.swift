@@ -18,6 +18,7 @@ struct ResultsView: View {
 
                 // 1. Device Context
                 ResultRowView(
+                    traceId: trace.id,
                     icon: "target",
                     title: "Device",
                     valueText: trace.device.formattedDeviceName
@@ -28,6 +29,7 @@ struct ResultsView: View {
                 // 2. Estimated Success Probability
                 let esp = finalStep?.figuresOfMerit.successProbability?.value
                 ResultRowView(
+                    traceId: trace.id,
                     icon: "checkmark.seal",
                     title: "Estimated Success",
                     valueText: esp != nil ? String(format: "%.2f%", esp!) : "N/A",
@@ -39,6 +41,7 @@ struct ResultsView: View {
                 // 3. Expected Fidelity
                 let fidelity = finalStep?.figuresOfMerit.expectedFidelity.value
                 ResultRowView(
+                    traceId: trace.id,
                     icon: "gauge.with.dots.needle.bottom.100percent",
                     title: "Expected Fidelity",
                     valueText: fidelity != nil ? String(format: "%.2f%", fidelity!) : "N/A",
@@ -50,6 +53,7 @@ struct ResultsView: View {
                 // 4. Liveness
                 let liveness = finalStep?.liveness
                 ResultRowView(
+                    traceId: trace.id,
                     icon: "waveform.path.ecg",
                     title: "Liveness",
                     valueText: liveness != nil ? String(format: "%.2f", liveness!) : "N/A",
@@ -61,6 +65,7 @@ struct ResultsView: View {
                 // 5. Parallelism
                 let parallelism = finalStep?.parallelism
                 ResultRowView(
+                    traceId: trace.id,
                     icon: "bolt",
                     title: "Parallelism",
                     valueText: parallelism != nil ? String(format: "%.2f", parallelism!) : "N/A",
@@ -72,6 +77,7 @@ struct ResultsView: View {
 }
 
 struct ResultRowView: View {
+    let traceId: ObjectIdentifier
     let icon: String
     let title: String
     let valueText: String
@@ -88,11 +94,11 @@ struct ResultRowView: View {
             if let targetValue = gaugeValue {
                 ZStack {
                     Circle()
-                        .stroke(gaugeColors.background, lineWidth: 3)
+                        .stroke(gaugeColors.background, lineWidth: 2)
 
                     Circle()
                         .trim(from: 0, to: CGFloat(animatedValue))
-                        .stroke(gaugeColors.stroke, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        .stroke(gaugeColors.stroke, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                         .rotationEffect(.degrees(-90))
                 }
                 .frame(width: 16, height: 16)
@@ -107,6 +113,7 @@ struct ResultRowView: View {
                 .font(.subheadline.weight(.semibold))
                 .monospacedDigit()
         }
+        .id(traceId)
     }
 }
 
