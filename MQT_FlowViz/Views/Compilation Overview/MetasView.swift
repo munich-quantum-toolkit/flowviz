@@ -14,10 +14,10 @@ struct MetasView: View {
         DashboardCardView(title: "Metas") {
             VStack(spacing: 0) {
                 // 1. Policy
-                MetaRowView(
+                IconizedRowView(
                     icon: "chart.xyaxis.line",
                     title: "Policy",
-                    valueText: trace.mdpPolicy.capitalized
+                    detailText: trace.mdpPolicy.capitalized
                 )
                 
                 Divider()
@@ -25,10 +25,10 @@ struct MetasView: View {
                 // 2. Total Actions
                 let totalActions = trace.steps.count - 1
 
-                MetaRowView(
+                IconizedRowView(
                     icon: "sum",
                     title: "Total Actions",
-                    valueText: "\(totalActions)"
+                    detailText: "\(totalActions)"
                 )
                 
                 Divider()
@@ -37,10 +37,10 @@ struct MetasView: View {
                 // placeholder for now until tracer adjustments can be made
                 let totalDuration: Double = 15.4
                 
-                MetaRowView(
+                IconizedRowView(
                     icon: "clock.arrow.trianglehead.clockwise.rotate.90.path.dotted",
                     title: "Total Duration",
-                    valueText: String(format: "%.1fs", totalDuration)
+                    detailText: String(format: "%.1fs", totalDuration)
                 )
                 
                 Divider()
@@ -48,40 +48,13 @@ struct MetasView: View {
                 // 4. Avg. Step Duration
                 let avgDuration: Double = totalActions > 0 ? (totalDuration / Double(totalActions)) : 0.0
                 
-                MetaRowView(
+                IconizedRowView(
                     icon: "circle.slash", 
                     title: "Avg. Step Duration",
-                    valueText: String(format: "%.1fs", avgDuration)
+                    detailText: String(format: "%.1fs", avgDuration)
                 )
             }
         }
-    }
-}
-
-// MARK: - Reusable Meta Row
-struct MetaRowView: View {
-    let icon: String
-    let title: String
-    let valueText: String
-
-    var body: some View {
-        HStack(spacing: 12) {
-            
-            Image(systemName: icon)
-                .font(.body.weight(.semibold))
-                .frame(width: 20) 
-            
-            Text(title)
-                .font(.subheadline.weight(.medium))
-            
-            Spacer()
-            
-            Text(valueText)
-                .font(.subheadline.weight(.semibold))
-                .monospacedDigit()
-        }
-        .foregroundStyle(Color.bluePrimary)
-        .padding(.vertical, 12)
     }
 }
 

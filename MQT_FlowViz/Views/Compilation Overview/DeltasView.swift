@@ -130,20 +130,7 @@ struct DeltaRowView: View {
     let boxColors: (textColor: Color, backgroundColor: Color)
 
     var body: some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.body.weight(.semibold))
-                    // Fixed width to align icons vertically
-                    .frame(width: 20)
-
-                Text(title)
-                    .font(.subheadline.weight(.medium))
-            }
-            .foregroundStyle(Color.bluePrimary)
-
-            Spacer()
-
+        IconizedRowView(icon: icon, title: title) {
             HStack(spacing: 12) {
                 if let initial = initialValue {
                     BoxedTextView(text: initial)
@@ -160,7 +147,6 @@ struct DeltaRowView: View {
                 )
             }
         }
-        .padding(.vertical, 12)
     }
 }
 
