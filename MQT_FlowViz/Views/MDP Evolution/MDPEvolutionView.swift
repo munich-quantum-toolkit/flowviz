@@ -26,7 +26,7 @@ struct MDPEvolutionView: View {
                 TimelineView(sequences: timelines, highlightedStep: $selectedStep)
             }
         }
-        .task {
+        .task(id: trace.id) {
             let (synthesizedRanges, laidOutRanges, routedRanges) = trace.getMDPStateEvolution()
 
             await MainActor.run {
