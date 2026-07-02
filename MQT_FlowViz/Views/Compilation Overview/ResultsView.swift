@@ -71,6 +71,19 @@ struct ResultsView: View {
                     valueText: parallelism != nil ? String(format: "%.2f", parallelism!) : "N/A",
                     gaugeValue: parallelism,
                 )
+
+                Divider()
+
+                // 6. Entanglement Ratio
+                let entanglementRatio = finalStep?.entanglementRatio
+                ResultRowView(
+                    traceId: trace.id,
+                    icon: "point.3.connected.trianglepath.dotted",
+                    title: "Entanglement Ratio",
+                    valueText: entanglementRatio != nil ? String(format: "%.2f", entanglementRatio!) : "N/A",
+                    gaugeValue: entanglementRatio,
+                )
+
             }
         }
     }

@@ -53,6 +53,19 @@ struct MetasView: View {
                     title: "Avg. Step Duration",
                     detailText: String(format: "%.2fs", avgDuration)
                 )
+
+                Divider()
+
+
+                // 5. Longest Step Duration
+                let longestStep = trace.steps.max(by: { $0.actionDuration < $1.actionDuration })
+                    IconizedRowView(icon: "clock.badge", title: "Max. Step Duration", detailText: longestStep != nil ? String(format: "%.2fs", longestStep!.actionDuration) : "N/A")
+
+                Divider()
+
+                // 6. Most Expensive Action Name
+                IconizedRowView(icon: "dollarsign", title: "Most Expensive Action", detailText: longestStep != nil ? longestStep!.actionName : "N/A")
+
             }
         }
     }
