@@ -66,7 +66,8 @@ final class QASMParser {
             // 2) Skip comments, headers, and Qubit Declarations!
             guard !line.isEmpty, !line.hasPrefix("//"), !line.hasPrefix("OPENQASM"),
                   !line.hasPrefix("include"), !line.hasPrefix("qubit["), !line.hasPrefix("qreg "),
-                  !line.hasPrefix("bit["), !line.hasPrefix("creg ")
+                  !line.hasPrefix("bit["), !line.hasPrefix("creg "),
+                  !line.hasPrefix("global_phase")
             else { continue }
 
             // 3) Handle Measurement Operations
@@ -158,20 +159,51 @@ final class QASMParser {
             let controls = Array(involvedQubits.prefix(numControls))
             let targets = Array(involvedQubits.dropFirst(numControls))
 
-            // --- EXTRACT BASE GATE ---
-            // Strip out possible "ctrl @" prefixes to find the clean base gate for the UI label
+            // --- EXTRACT BASE GATE & MODIFIERS ---
             var baseGateIdentifier = rawGateIdentifier
-            while let range = baseGateIdentifier.range(of: "(?i)ctrl(?:\\(\\d+\\))?\\s*@\\s*", options: .regularExpression) {
-                baseGateIdentifier.removeSubrange(range)
+            var isInverse = false
+            var power: String? = nil
+
+            // 1. Check for the inverse modifier
+            if let invRange = baseGateIdentifier.range(of: "(?i)inv\\s*@\\s*", options: .regularExpression) {
+                isInverse = true
+                baseGateIdentifier.removeSubrange(invRange)
             }
 
-            let gateName = baseGateIdentifier.components(separatedBy: "(").first ?? baseGateIdentifier
-            var parameter: String? = nil
+            // 2. Check for the power modifier
+            if let powRange = baseGateIdentifier.range(of: "(?i)pow\\(([^)]+)\\)\\s*@\\s*", options: .regularExpression) {
+                // Extract the value inside the parentheses
+                let matchString = String(baseGateIdentifier[powRange])
+                if let paramStart = matchString.firstIndex(of: "("), let paramEnd = matchString.firstIndex(of: ")") {
+                    let start = matchString.index(after: paramStart)
+                    power = String(matchString[start..<paramEnd])
+                }
+                baseGateIdentifier.removeSubrange(powRange)
+            }
 
+            // 3. Check for the ctrl modifier
+            while let ctrlRange = baseGateIdentifier.range(of: "(?i)ctrl(?:\\(\\d+\\))?\\s*@\\s*", options: .regularExpression) {
+                baseGateIdentifier.removeSubrange(ctrlRange)
+            }
+
+            // --- EXTRACT GATE PARAMETERS ---
+            // Now that modifiers are stripped out, check if the remaining base gate has parameters (e.g., "rx(pi/2)")
+            var parameter: String? = nil
             if let paramStart = baseGateIdentifier.firstIndex(of: "("), let paramEnd = baseGateIdentifier.lastIndex(of: ")") {
                 let start = baseGateIdentifier.index(after: paramStart)
                 let rawParameter = String(baseGateIdentifier[start..<paramEnd])
                 parameter = formatParameter(rawParameter)
+            }
+
+            // --- FORMAT THE UI LABEL ---
+            var gateName = baseGateIdentifier.components(separatedBy: "(").first ?? baseGateIdentifier
+
+            // Append modifiers to the visual label
+            if let power = power {
+                gateName += "^\(power)" // e.g., x^0.5
+            }
+            if isInverse {
+                gateName += "†" // e.g., s†
             }
 
             // --- APPEND OPERATION & RESERVE SPAN ---
@@ -278,39 +310,45 @@ final class QASMParser {
         }
     }
 
-    /// Searches a parameter string for floating-point numbers and formats them to 3 decimal places. Additionally replaces "pi" with "π".
+    /// Searches a parameter string for numbers and neatly formats them. Replaces "pi" with "π" and cleans up multiplication syntax.
     ///
     /// Leaves non-numeric characters (like 'pi') untouched.
     /// - Parameter parameter: The label of a quantum gate.
     /// - Returns: The formatted label.
     private static func formatParameter(_ gateLabel: String) -> String {
         do {
-            // Matches optional +/- followed by optional digits, a dot, and 1 or more digits (e.g., -4.578679)
-            let regex = try NSRegularExpression(pattern: "[-+]?\\d*\\.\\d+")
+            // Regex matches floats, including optional scientific notation (e.g., -0.123, 1.5e-4)
+            let regex = try NSRegularExpression(pattern: "[-+]?\\d*\\.\\d+(?:[eE][-+]?\\d+)?")
             let nsString = gateLabel as NSString
             let results = regex.matches(in: gateLabel, range: NSRange(location: 0, length: nsString.length))
 
             var formattedString = gateLabel
 
-            // Iterate in reverse so modifying the string doesn't shift the index ranges of earlier matches
+            // Use NumberFormatter for clean, trailing-zero-free formatting
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.maximumFractionDigits = 3
+            formatter.minimumFractionDigits = 0
+            formatter.decimalSeparator = "."
+
+            // Iterate in reverse so modifying the string doesn't shift the index ranges
             for result in results.reversed() {
                 let matchString = nsString.substring(with: result.range)
-                if let value = Double(matchString) {
-                    let formattedValue = String(format: "%.3f", value)
+                if let value = Double(matchString),
+                   let formattedValue = formatter.string(from: NSNumber(value: value)) {
                     formattedString = (formattedString as NSString).replacingCharacters(in: result.range, with: formattedValue)
                 }
             }
-            return formattedString.replacingOccurrences(
-                of: "pi",
-                with: "π",
-                options: .caseInsensitive
-            )
+
+            // 1. Replace "pi" with "π"
+            // 2. Remove asterisks attached to π (e.g., "3*π/2" -> "3π/2")
+            return formattedString
+                .replacingOccurrences(of: "pi", with: "π", options: .caseInsensitive)
+                .replacingOccurrences(of: "*π", with: "π")
+                .replacingOccurrences(of: "π*", with: "π")
+
         } catch {
-            return gateLabel.replacingOccurrences(
-                of: "pi",
-                with: "π",
-                options: .caseInsensitive
-            )
+            return gateLabel.replacingOccurrences(of: "pi", with: "π", options: .caseInsensitive)
         }
     }
 
