@@ -43,9 +43,15 @@ struct CompilationPipelineView: View {
             }
         }
         .task(id: trace.id) {
-            let loadedTimelines = trace.getActionEvolution()
-            await MainActor.run {
-                self.timelines = loadedTimelines
+            let rawEvolutionData = trace.getActionEvolution()
+
+            self.timelines = rawEvolutionData.map { data in
+                TimelineSequence(
+                    title: data.title,
+                    stepRanges: data.ranges,
+                    backgroundColor: Color.blueBackground,
+                    textColor: Color.bluePrimary
+                )
             }
         }
     }

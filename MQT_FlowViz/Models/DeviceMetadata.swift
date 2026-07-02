@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct DeviceMetadata: Codable, Hashable {
+struct DeviceMetadata: nonisolated Codable, Hashable, Sendable {
     let name: String
     let deviceQubits: Int
     let nativeGates: [String]

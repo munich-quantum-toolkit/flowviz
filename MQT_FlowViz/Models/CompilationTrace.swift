@@ -73,8 +73,8 @@ final class CompilationTrace: Codable, Identifiable {
     }
 
     /// Collects the actions that were applied throughout the compilation.
-    /// - Returns: An array of ``TimelineSequence`` values.
-    func getActionEvolution() -> [TimelineSequence] {
+    /// - Returns: An array of tuples containing the action name and its active ranges.
+    func getActionEvolution() -> [(title: String, ranges: [ClosedRange<Int>])] {
         guard !steps.isEmpty else { return [] }
 
         let sortedSteps = steps.sorted { $0.stepIndex < $1.stepIndex }
@@ -119,12 +119,7 @@ final class CompilationTrace: Codable, Identifiable {
         }
 
         return orderedActions.map { action in
-            TimelineSequence(
-                title: action,
-                stepRanges: actionRanges[action] ?? [],
-                backgroundColor: Color.blueBackground,
-                textColor: Color.bluePrimary
-            )
+            (title: action, ranges: actionRanges[action] ?? [])
         }
     }
 
