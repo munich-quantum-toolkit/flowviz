@@ -24,21 +24,26 @@ struct ChartDataPoint: Identifiable {
 
 /// Represents a logical dataset and stores information relevant for plotting.
 struct ChartDataSet: Identifiable {
-    let id = UUID()
     let name: String
     let color: Color
     let data: [ChartDataPoint]
+
+    var id: String { name }
 }
 
 /// A single plottable data point containing all the required information for SwiftUI's Chart library.
 struct PlottableDataPoint: Identifiable {
-    let id = UUID()
     let seriesName: String
     let seriesColor: Color
     let step: Int
     let value: Float
     let tentative: Bool
     let unavailable: Bool
+
+    // Stable ID combining the series name and the step (e.g., "Expected Fidelity-5")
+    // This is important for performance, do not use a UUID here since PlottableDataPoints are
+    // initialized directly in the init of GraphBoxView.
+    var id: String { "\(seriesName)-\(step)" }
 
     var symbolState: String {
         if unavailable { return "Unavailable" }
