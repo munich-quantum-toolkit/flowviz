@@ -102,7 +102,12 @@ struct GraphBoxView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             ForEach(currentData) { item in
                                 HStack(spacing: 6) {
-                                    if item.tentative {
+                                    // Differentiate shapes based on state
+                                    if item.unavailable {
+                                        BasicChartSymbolShape.triangle
+                                            .fill(item.seriesColor)
+                                            .frame(width: 8, height: 8)
+                                    } else if item.tentative {
                                         BasicChartSymbolShape.cross
                                             .fill(item.seriesColor)
                                             .frame(width: 8, height: 8)
@@ -112,9 +117,15 @@ struct GraphBoxView: View {
                                             .frame(width: 8, height: 8)
                                     }
 
-                                    Text(String(format: "%.2f", item.value))
-                                        .font(.footnote.bold())
-                                        .foregroundStyle(.primary)
+                                    if item.unavailable {
+                                        Text("N/A")
+                                            .font(.footnote.bold())
+                                            .foregroundStyle(.primary)
+                                    } else {
+                                        Text(String(format: "%.2f", item.value))
+                                            .font(.footnote.bold())
+                                            .foregroundStyle(.primary)
+                                    }
                                 }
                             }
                         }
@@ -131,6 +142,7 @@ struct GraphBoxView: View {
             }
             .chartForegroundStyleScale(domain: chartDomain, range: chartColorRange)
             .chartSymbolScale([
+                "Unavailable": BasicChartSymbolShape.triangle,
                 "Tentative": BasicChartSymbolShape.cross,
                 "Final": BasicChartSymbolShape.circle
             ])

@@ -11,12 +11,14 @@ struct ChartDataPoint: Identifiable {
     let step: Int
     let value: Float
     let tentative: Bool
+    let unavailable: Bool
     var id: Int { step }
 
-    init(step: Int, value: Float, tentative: Bool = false) {
+    init(step: Int, value: Float, tentative: Bool = false, unavailable: Bool = false) {
         self.step = step
         self.value = value
         self.tentative = tentative
+        self.unavailable = unavailable
     }
 }
 
@@ -36,7 +38,13 @@ struct PlottableDataPoint: Identifiable {
     let step: Int
     let value: Float
     let tentative: Bool
-    var symbolState: String { tentative ? "Tentative" : "Final" }
+    let unavailable: Bool
+
+    var symbolState: String {
+        if unavailable { return "Unavailable" }
+        if tentative { return "Tentative" }
+        return "Final"
+    }
 }
 
 extension Array where Element == ChartDataSet {
@@ -49,7 +57,8 @@ extension Array where Element == ChartDataSet {
                     seriesColor: dataset.color,
                     step: point.step,
                     value: point.value,
-                    tentative: point.tentative
+                    tentative: point.tentative,
+                    unavailable: point.unavailable
                 )
             }
         }
