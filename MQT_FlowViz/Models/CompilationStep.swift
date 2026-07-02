@@ -8,11 +8,40 @@
 
 import Foundation
 
+/// An enum containing all supported action types.
+enum ActionType: Hashable, Codable {
+    case initial
+    case optimization
+    case synthesis
+    case mapping
+    case layout
+    case routing
+    case finalOptimization
+    case terminate
+    case other(String)
+
+    init(stringValue: String) {
+        switch stringValue {
+        case "INITIAL": self = .initial
+        case "optimization": self = .optimization
+        case "synthesis": self = .synthesis
+        case "mapping": self = .mapping
+        case "layout": self = .layout
+        case "routing": self = .routing
+        case "final_optimization": self = .finalOptimization
+        case "terminate": self = .terminate
+        default: self = .other(stringValue)
+        }
+    }
+}
+
 struct CompilationStep: Codable, Hashable, Identifiable {
-    var id: Int { stepIndex } // SwiftUI requires an 'id' for lists, stepIndex is perfect!
-    
+    var id: Int { stepIndex }
+
     let stepIndex: Int
-    let action: String
+    let actionName: String
+    let actionType: String
+    let actionDuration: Float
     let reward: Double
     let currentDepth: Int
     let numQubits: Int
@@ -29,4 +58,8 @@ struct CompilationStep: Codable, Hashable, Identifiable {
     let entanglementRatio: Double
     let parallelism: Double
     let liveness: Double
+
+    var actionTypeEnum: ActionType {
+        ActionType(stringValue: actionType)
+    }
 }

@@ -19,9 +19,10 @@ final class CompilationTrace: Codable, Identifiable {
     var device: DeviceMetadata
     var schemaVersion: String
     var timestamp: Double
+    var totalDuration: Float
     var steps: [CompilationStep]
 
-    init(id: String, circuitName: String, figureOfMerit: String, mdpPolicy: String, device: DeviceMetadata, schemaVersion: String, timestamp: Double, steps: [CompilationStep]) {
+    init(id: String, circuitName: String, figureOfMerit: String, mdpPolicy: String, device: DeviceMetadata, schemaVersion: String, timestamp: Double, totalDuration: Float, steps: [CompilationStep]) {
         self.id = id
         self.circuitName = circuitName
         self.figureOfMerit = figureOfMerit
@@ -29,6 +30,7 @@ final class CompilationTrace: Codable, Identifiable {
         self.device = device
         self.schemaVersion = schemaVersion
         self.timestamp = timestamp
+        self.totalDuration = totalDuration
         self.steps = steps
     }
 
@@ -40,6 +42,7 @@ final class CompilationTrace: Codable, Identifiable {
         case device
         case schemaVersion
         case timestamp
+        case totalDuration
         case steps
     }
 
@@ -53,6 +56,7 @@ final class CompilationTrace: Codable, Identifiable {
         self.device = try container.decode(DeviceMetadata.self, forKey: .device)
         self.schemaVersion = try container.decode(String.self, forKey: .schemaVersion)
         self.timestamp = try container.decode(Double.self, forKey: .timestamp)
+        self.totalDuration = try container.decode(Float.self, forKey: .totalDuration)
         self.steps = try container.decode([CompilationStep].self, forKey: .steps)
     }
 
@@ -81,7 +85,7 @@ final class CompilationTrace: Codable, Identifiable {
         var orderedActions: [String] = []
 
         for step in sortedSteps {
-            let action = step.action
+            let action = step.actionName
 
             // Register action on first appearance
             if actionRanges[action] == nil {

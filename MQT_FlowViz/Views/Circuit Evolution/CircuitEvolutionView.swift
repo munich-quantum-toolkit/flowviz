@@ -13,7 +13,7 @@ struct CircuitEvolutionView: View {
     @State var parseError: String? = nil
 
     var currentActionName: String {
-        currentStep >= 0 && currentStep < trace.steps.count ? trace.steps[currentStep].action : "Unknown Action"
+        currentStep >= 0 && currentStep < trace.steps.count ? trace.steps[currentStep].actionName : "Unknown Action"
     }
 
     // UI Constants for Canvas Alignment

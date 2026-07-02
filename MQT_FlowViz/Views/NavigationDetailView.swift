@@ -27,7 +27,7 @@ struct NavigationDetailView: View {
         .hideKeyboardOnTap()
         .toolbar {
             ToolbarItem(placement: .principal) {
-                let actionText = selectedStep < currentTrace.steps.count ? currentTrace.steps[selectedStep].action : "Action"
+                let actionText = selectedStep < currentTrace.steps.count ? currentTrace.steps[selectedStep].actionName : "Action"
 
                 Text(actionText)
                     #if os(macOS)

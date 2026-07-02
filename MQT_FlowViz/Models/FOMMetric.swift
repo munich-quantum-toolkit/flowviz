@@ -15,4 +15,8 @@ struct FOMMetric: Codable, Hashable {
     var tentative: Bool {
         return kind == "approx"
     }
+
+    var unavailable: Bool {
+        return kind == "unavailable"
+    }
 }

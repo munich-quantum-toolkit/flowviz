@@ -92,7 +92,7 @@ struct EvolutionComparisonView: View {
     @ViewBuilder
     private func circuitPanel(step: Binding<Int>, circuit: ParsedCircuit?, parseError: String?) -> some View {
         let isValid = step.wrappedValue >= 0 && step.wrappedValue < trace.steps.count
-        let actionName = isValid ? trace.steps[step.wrappedValue].action : "Unknown Action"
+        let actionName = isValid ? trace.steps[step.wrappedValue].actionName : "Unknown Action"
 
         VStack(alignment: .leading, spacing: 12) {
             HStack {
