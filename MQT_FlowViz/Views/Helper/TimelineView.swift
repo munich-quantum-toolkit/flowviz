@@ -158,7 +158,7 @@ struct StepColumn: View {
                                 popoverSequenceID = nil
                             }
                         }
-                    ), arrowEdge: .top) {
+                    )) {
                         if let currentStep = steps.first(where: { $0.stepIndex == step }) {
                             TooltipMetricsView(currentStep: currentStep)
                                 .presentationBackground(.white)

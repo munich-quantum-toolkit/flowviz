@@ -137,7 +137,7 @@ struct DeltaRowView: View {
                         .font(.caption.bold())
                         .foregroundStyle(.bluePrimary)
                         .padding(6)
-                        .frame(minWidth: 35)
+                        .frame(minWidth: 40)
                         .background(.blueBackground)
                         .cornerRadius(8)
 
@@ -150,7 +150,7 @@ struct DeltaRowView: View {
                     .font(.caption.bold())
                     .foregroundStyle(boxColors.textColor)
                     .padding(6)
-                    .frame(width: 35)
+                    .frame(width: 40)
                     .background(boxColors.backgroundColor)
                     .cornerRadius(8)
             }
