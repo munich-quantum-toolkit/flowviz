@@ -35,23 +35,23 @@ struct MetasView: View {
                 
                 // 3. Total Duration
                 // placeholder for now until tracer adjustments can be made
-                let totalDuration: Double = 15.4
-                
+                let totalDuration: Float = trace.totalDuration
+
                 IconizedRowView(
                     icon: "clock.arrow.trianglehead.clockwise.rotate.90.path.dotted",
                     title: "Total Duration",
-                    detailText: String(format: "%.1fs", totalDuration)
+                    detailText: String(format: "%.2fs", totalDuration)
                 )
                 
                 Divider()
                 
                 // 4. Avg. Step Duration
-                let avgDuration: Double = totalActions > 0 ? (totalDuration / Double(totalActions)) : 0.0
-                
+                let avgDuration: Float = totalActions > 0 ? (totalDuration / Float(totalActions)) : 0.0
+
                 IconizedRowView(
                     icon: "circle.slash", 
                     title: "Avg. Step Duration",
-                    detailText: String(format: "%.1fs", avgDuration)
+                    detailText: String(format: "%.2fs", avgDuration)
                 )
             }
         }
