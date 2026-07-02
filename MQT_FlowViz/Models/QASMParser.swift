@@ -71,7 +71,7 @@ final class QASMParser {
 
             // 3) Handle Measurement Operations
             if line.contains("measure") {
-                if let qMatch = match(pattern: "q\\[(\\d+)\\]", in: line),
+                if let qMatch = match(pattern: "(?:q\\[|\\$)(\\d+)(?:\\])?", in: line),
                    let cMatch = match(pattern: "(?:c|meas)\\[(\\d+)\\]", in: line),
                    let qBit = Int(qMatch), let cBit = Int(cMatch) {
 
@@ -107,9 +107,11 @@ final class QASMParser {
             // 5) Handle Logic Gates
             let cleanLine = line.replacingOccurrences(of: ";", with: "")
 
-            // Extract everything before the first qubit declaration as the gate identifier
-            // For instance "ctrl @ x q[0]" splits into ""ctrl @ x " and "q[0]"
-            let gateIdentifierEndIndex = cleanLine.range(of: "q[")?.lowerBound ?? cleanLine.endIndex
+            // Find the first occurrence of either "q[" or "$"
+            let qIndex = cleanLine.range(of: "q[")?.lowerBound
+            let dollarIndex = cleanLine.range(of: "$")?.lowerBound
+            let gateIdentifierEndIndex = [qIndex, dollarIndex].compactMap { $0 }.min() ?? cleanLine.endIndex
+
             let rawGateIdentifier = String(cleanLine[..<gateIdentifierEndIndex]).trimmingCharacters(in: .whitespaces)
 
             guard !rawGateIdentifier.isEmpty else {
@@ -266,7 +268,8 @@ final class QASMParser {
     /// - Returns: An array of all occuring integer values associated with a qubit.
     private static func extractAllQubitIntegers(from string: String) -> [Int] {
         do {
-            let regex = try NSRegularExpression(pattern: "q\\[(\\d+)\\]")
+            // Regex matches either "q[<digits>]" OR "$<digits>"
+            let regex = try NSRegularExpression(pattern: "(?:q\\[|\\$)(\\d+)(?:\\])?")
             let nsString = string as NSString
             let results = regex.matches(in: string, range: NSRange(location: 0, length: nsString.length))
             return results.compactMap { Int(nsString.substring(with: $0.range(at: 1))) }
