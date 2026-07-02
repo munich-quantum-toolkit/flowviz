@@ -8,6 +8,7 @@ import SwiftUI
 
 struct TimelineView: View {
     let sequences: [TimelineSequence]
+    let steps: [CompilationStep]
     @Binding var highlightedTimestep: Int
 
     let rowHeight: CGFloat = 44
@@ -17,8 +18,9 @@ struct TimelineView: View {
     let startingStep: Int
     let endingStep: Int
 
-    init(sequences: [TimelineSequence], highlightedStep: Binding<Int>) {
+    init(sequences: [TimelineSequence], highlightedStep: Binding<Int>, steps: [CompilationStep]) {
         self.sequences = sequences
+        self.steps = steps
         self.startingStep = sequences.compactMap { $0.minStep }.min() ?? 0
         self.endingStep = sequences.compactMap { $0.maxStep }.max() ?? 0
         self._highlightedTimestep = highlightedStep
@@ -72,6 +74,7 @@ struct TimelineView: View {
                                         step: step,
                                         highlightedTimestep: $highlightedTimestep,
                                         sequences: sequences,
+                                        steps: steps,
                                         rowHeight: rowHeight,
                                         rowSpacing: rowSpacing,
                                         pillHeight: innerPillHeight
@@ -111,9 +114,13 @@ struct StepColumn: View {
     let step: Int
     @Binding var highlightedTimestep: Int
     let sequences: [TimelineSequence]
+    let steps: [CompilationStep]
     let rowHeight: CGFloat
     let rowSpacing: CGFloat
     let pillHeight: CGFloat
+
+    // Track which timeline's box triggered the popover using its unique ID
+    @State private var popoverSequenceID: TimelineSequence.ID? = nil
 
     var body: some View {
         VStack(spacing: rowSpacing) {
@@ -121,20 +128,41 @@ struct StepColumn: View {
                 let isActive = phase.contains(step: step)
 
                 if isActive {
-                    if highlightedTimestep == step {
-                        // Highlighted Boxes have text color as background & white as text color
-                        BoxedTextView(text: "\(step)", backgroundColor: phase.textColor, textColor: .white)
-                            .frame(width: 36, height: pillHeight) // Ensure consistent width
-                            .frame(height: rowHeight)
-                    } else {
-                        BoxedTextView(text: "\(step)", backgroundColor: phase.backgroundColor, textColor: phase.textColor)
-                            .frame(width: 36, height: pillHeight) // Ensure consistent width
-                            .frame(height: rowHeight)
-                            .onTapGesture {
-                                withAnimation(.snappy(duration: 0.3)) {
-                                    highlightedTimestep = step
-                                }
+                    let isHighlighted = (highlightedTimestep == step)
+
+                    BoxedTextView(
+                        text: "\(step)",
+                        backgroundColor: isHighlighted ? phase.textColor : phase.backgroundColor,
+                        textColor: isHighlighted ? .white : phase.textColor
+                    )
+                    .frame(width: 36, height: pillHeight)
+                    .frame(height: rowHeight)
+                    // Normal Tap: Only handles selection/highlighting
+                    .onTapGesture {
+                        if !isHighlighted {
+                            withAnimation(.snappy(duration: 0.3)) {
+                                highlightedTimestep = step
                             }
+                        }
+                    }
+                    // Long Press: Explicitly triggers the popover on this specific box
+                    .onLongPressGesture {
+                        popoverSequenceID = phase.id
+                    }
+                    // Bind the popover strictly to this specific box's ID
+                    .popover(isPresented: Binding(
+                        get: { popoverSequenceID == phase.id },
+                        set: { isPresented in
+                            // Cleanly reset the ID when the user taps away
+                            if !isPresented && popoverSequenceID == phase.id {
+                                popoverSequenceID = nil
+                            }
+                        }
+                    ), arrowEdge: .top) {
+                        if let currentStep = steps.first(where: { $0.stepIndex == step }) {
+                            TooltipMetricsView(currentStep: currentStep)
+                                .presentationBackground(.white)
+                        }
                     }
                 } else {
                     if let min = phase.minStep, let max = phase.maxStep, step >= min && step <= max {
@@ -152,6 +180,42 @@ struct StepColumn: View {
                     }
                 }
             }
+        }
+    }
+}
+
+// MARK: - Tooltip View
+struct TooltipMetricsView: View {
+    let currentStep: CompilationStep
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(currentStep.actionName)
+                .font(.footnote.weight(.medium))
+            Label("\(currentStep.numQubits) Qubits", systemImage: "circle.dotted.and.circle")
+            Label(String(format: "Duration %.2f", currentStep.actionDuration), systemImage: "clock.arrow.trianglehead.clockwise.rotate.90.path.dotted")
+            Label(String(format: "Depth %.2f", currentStep.rawCriticalDepth), systemImage: "arrow.down.to.line.compact")
+            Label(String(format: "Parallelism %.2f", currentStep.parallelism), systemImage: "bolt")
+            Label(String(format: "Liveness %.2f", currentStep.liveness), systemImage: "waveform.path.ecg")
+            Label(String(format: "Entanglement %.2f", currentStep.entanglementRatio), systemImage: "point.3.connected.trianglepath.dotted")
+        }
+        .foregroundStyle(.black)
+        .font(.footnote.weight(.regular))
+        .symbolRenderingMode(.monochrome)
+        .labelStyle(TooltipIconLabelStyle())
+        .padding(12)
+        .presentationCompactAdaptation(.popover)
+    }
+}
+
+struct TooltipIconLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 12) {
+            configuration.icon
+                .frame(width: 18, alignment: .center)
+                .foregroundStyle(Color.bluePrimary)
+
+            configuration.title
         }
     }
 }
@@ -240,7 +304,7 @@ struct Line: Shape {
     ZStack {
         // NOTE: LazyHStack causes issues in the preview, but works fine in the simulator! Temporarily replace LazyHStack in Line 64 with HStack if you're developing using only the preview here.
         Color(white: 0.96).ignoresSafeArea()
-        TimelineView(sequences: mockSequences, highlightedStep: .constant(0))
+        TimelineView(sequences: mockSequences, highlightedStep: .constant(0), steps: [])
             .padding()
             .background(Color.white)
     }

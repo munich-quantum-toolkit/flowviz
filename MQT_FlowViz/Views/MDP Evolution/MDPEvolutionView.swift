@@ -23,7 +23,7 @@ struct MDPEvolutionView: View {
                 .font(.title2.bold())
 
             DashboardCardView(title: "Circuit State") {
-                TimelineView(sequences: timelines, highlightedStep: $selectedStep)
+                TimelineView(sequences: timelines, highlightedStep: $selectedStep, steps: trace.steps)
             }
         }
         .task(id: trace.id) {

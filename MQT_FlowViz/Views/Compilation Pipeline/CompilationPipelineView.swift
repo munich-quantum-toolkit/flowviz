@@ -27,7 +27,7 @@ struct CompilationPipelineView: View {
 
             DashboardCardView(title: "Applied Actions") {
                 VStack(alignment: .center, spacing: 16) {
-                    TimelineView(sequences: Array(timelines.prefix(expandedPipeline ? timelines.count : collapsedCount)), highlightedStep: $selectedStep)
+                    TimelineView(sequences: Array(timelines.prefix(expandedPipeline ? timelines.count : collapsedCount)), highlightedStep: $selectedStep, steps: trace.steps)
 
                     Button(action: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8, blendDuration: 0)) {
