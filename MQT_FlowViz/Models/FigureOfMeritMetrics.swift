@@ -11,6 +11,6 @@ import Foundation
 struct FigureOfMeritMetrics: Codable, Hashable {
     let expectedFidelity: FOMMetric
     let criticalDepth: FOMMetric
-    let hellingerDistance: FOMMetric?
-    let successProbability: FOMMetric?
+    let estimatedHellingerDistance: FOMMetric?
+    let estimatedSuccessProbability: FOMMetric?
 }

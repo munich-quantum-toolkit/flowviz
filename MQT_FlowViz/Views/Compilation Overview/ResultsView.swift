@@ -27,7 +27,7 @@ struct ResultsView: View {
                 Divider()
 
                 // 2. Estimated Success Probability
-                let esp = finalStep?.figuresOfMerit.successProbability?.value
+                let esp = finalStep?.figuresOfMerit.estimatedSuccessProbability?.value
                 ResultRowView(
                     traceId: trace.id,
                     icon: "checkmark.seal",

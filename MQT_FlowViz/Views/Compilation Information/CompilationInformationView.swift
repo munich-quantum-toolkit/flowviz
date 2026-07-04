@@ -86,13 +86,13 @@ struct CompilationInformationView: View {
                 let criticalDepth = step.figuresOfMerit.criticalDepth
                 tempCriticalDepth.append(ChartDataPoint(step: index, value: Float(criticalDepth.value), tentative: criticalDepth.tentative, unavailable: criticalDepth.unavailable))
 
-                if let hellingerDistance = step.figuresOfMerit.hellingerDistance {
+                if let hellingerDistance = step.figuresOfMerit.estimatedHellingerDistance {
                     tempHellingerDistance.append(ChartDataPoint(step: index, value: Float(hellingerDistance.value), tentative: hellingerDistance.tentative, unavailable: hellingerDistance.unavailable))
                 } else {
                     tempHellingerDistance.append(nil)
                 }
 
-                if let esp = step.figuresOfMerit.successProbability {
+                if let esp = step.figuresOfMerit.estimatedSuccessProbability {
                     tempEstimatedSuccessProbability.append(ChartDataPoint(step: index, value: Float(esp.value), tentative: esp.tentative, unavailable: esp.unavailable))
                 } else {
                     tempEstimatedSuccessProbability.append(nil)
