@@ -40,19 +40,53 @@ struct CanvasRenderView: View {
 
                     // Draw horizontal wires
                     for i in 0..<currentCircuit.wires.count {
+                        let wire = currentCircuit.wires[i]
                         let yPosition = CGFloat(i) * rowHeight + (rowHeight / 2)
 
                         var path = Path()
                         path.move(to: CGPoint(x: 0, y: yPosition))
                         path.addLine(to: CGPoint(x: size.width, y: yPosition))
 
-                        context.stroke(path, with: .color(.gray.opacity(0.2)), lineWidth: 2)
+                        if wire.isClassical {
+                            // Draw a double line for classical registers
+                            var doublePath = Path()
+                            doublePath.move(to: CGPoint(x: 0, y: yPosition - 1.5))
+                            doublePath.addLine(to: CGPoint(x: size.width, y: yPosition - 1.5))
+                            doublePath.move(to: CGPoint(x: 0, y: yPosition + 1.5))
+                            doublePath.addLine(to: CGPoint(x: size.width, y: yPosition + 1.5))
+
+                            context.stroke(doublePath, with: .color(.gray.opacity(0.4)), lineWidth: 1)
+                        } else {
+                            context.stroke(path, with: .color(.gray.opacity(0.2)), lineWidth: 2)
+                        }
                     }
 
                     // Draw Operations
                     for op in currentCircuit.operations {
                         let xCenter = momentCenters[op.momentIndex]
 
+                        // 1. DRAW CLASSICAL CONTROLS FIRST (So they render in the background)
+                        for cControl in op.classicalControls {
+                            let yClassical = CGFloat(cControl) * rowHeight + (rowHeight / 2)
+
+                            // Connect to the lowest quantum wire (highest index) so we don't slice through the gate
+                            guard let maxQ = op.involvedQubits.max() else { continue }
+                            let yTarget = CGFloat(maxQ) * rowHeight + (rowHeight / 2)
+
+                            var doublePath = Path()
+                            doublePath.move(to: CGPoint(x: xCenter - 1.5, y: yClassical))
+                            doublePath.addLine(to: CGPoint(x: xCenter - 1.5, y: yTarget))
+                            doublePath.move(to: CGPoint(x: xCenter + 1.5, y: yClassical))
+                            doublePath.addLine(to: CGPoint(x: xCenter + 1.5, y: yTarget))
+
+                            context.stroke(doublePath, with: .color(.bluePrimary), lineWidth: 1)
+
+                            // Draw a small dot on the classical wire
+                            let dotRect = CGRect(x: xCenter - 3, y: yClassical - 3, width: 6, height: 6)
+                            context.fill(Path(ellipseIn: dotRect), with: .color(.bluePrimary))
+                        }
+
+                        // 2. DRAW QUANTUM GATES SECOND (So they render on top of the classical lines)
                         switch op.type {
                         case .singleQubit(let target, _, _):
                             let yCenter = CGFloat(target) * rowHeight + (rowHeight / 2)
@@ -61,14 +95,32 @@ struct CanvasRenderView: View {
                                 context.draw(symbol, at: CGPoint(x: xCenter, y: yCenter))
                             }
 
-                        case .measurement(let target, _):
+                        case .measurement(let target, let classicalBit):
                             let yCenter = CGFloat(target) * rowHeight + (rowHeight / 2)
+
+                            // Only draw the dropdown line if the classical bit actually exists on the canvas
+                            if let cBit = classicalBit {
+                                let yClassical = CGFloat(cBit) * rowHeight + (rowHeight / 2)
+
+                                var doublePath = Path()
+                                doublePath.move(to: CGPoint(x: xCenter - 1.5, y: yCenter))
+                                doublePath.addLine(to: CGPoint(x: xCenter - 1.5, y: yClassical))
+                                doublePath.move(to: CGPoint(x: xCenter + 1.5, y: yCenter))
+                                doublePath.addLine(to: CGPoint(x: xCenter + 1.5, y: yClassical))
+
+                                // Changed to bluePrimary
+                                context.stroke(doublePath, with: .color(.bluePrimary), lineWidth: 1)
+
+                                // Added grounded dot
+                                let dotRect = CGRect(x: xCenter - 3, y: yClassical - 3, width: 6, height: 6)
+                                context.fill(Path(ellipseIn: dotRect), with: .color(.bluePrimary))
+                            }
 
                             if let symbol = measurementSymbol {
                                 context.draw(symbol, at: CGPoint(x: xCenter, y: yCenter))
                             }
 
-                        case .multiQubit(let control, let target, _):
+                        case .multiQubit(let control, let target, _, _):
                             let yControl = CGFloat(control) * rowHeight + (rowHeight / 2)
                             let yTarget = CGFloat(target) * rowHeight + (rowHeight / 2)
 
@@ -161,8 +213,9 @@ struct CanvasRenderView: View {
                             BoxedTextView(text: text)
                                 .tag(op.id)
 
-                        case .multiQubit(_, _, let label):
-                            BoxedTextView(text: label.uppercased())
+                        case .multiQubit(_, _, let label, let param):
+                            let text = param != nil ? "\(label.uppercased())(\(param!))" : label.uppercased()
+                            BoxedTextView(text: text)
                                 .tag(op.id)
 
                         case .nQubit(_, _, let label):
@@ -202,7 +255,17 @@ struct CanvasRenderView: View {
                 // estimate of ~8 points per char + 24pt padding inside the box + 16pt margin
                 requiredWidth = CGFloat(textLength * 8) + 40
 
-            case .multiQubit(_, _, let label), .nQubit(_, _, let label):
+            case .multiQubit(_, _, let label, let parameter):
+                let lowerLabel = label.lowercased()
+                if lowerLabel == "swap" || lowerLabel == "cswap" {
+                    // Swaps only draw xmarks, so they only need the minimum width
+                    requiredWidth = minWidth
+                } else {
+                    let textLength = if let param = parameter { label.count + param.count + 2 } else { label.count }
+                    requiredWidth = CGFloat(textLength * 8) + 40
+                }
+
+            case .nQubit(_, _, let label):
                 let lowerLabel = label.lowercased()
                 if lowerLabel == "swap" || lowerLabel == "cswap" {
                     // Swaps only draw xmarks, so they only need the minimum width
