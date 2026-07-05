@@ -16,6 +16,7 @@ final class QASMParser {
         case unsupportedVersion(String)
         case missingQubits(line: Int, instruction: String)
         case unknownInstruction(line: Int, instruction: String)
+        case emptyCircuit(message: String)
 
         var errorDescription: String? {
             switch self {
@@ -25,6 +26,8 @@ final class QASMParser {
                 return "Syntax Error on line \(line): Expected target qubits for operation '\(instruction)'."
             case .unknownInstruction(let line, let instruction):
                 return "Parse Error on line \(line): Unrecognized instruction '\(instruction)'."
+            case .emptyCircuit(let message):
+                return "Parsing yielded empty circuit for QASM string: \"\(message)\" (\(message.count) characters)"
             }
         }
     }
@@ -374,6 +377,11 @@ final class QASMParser {
         }
 
         logger.info("Compaction phase finished successfully.")
+
+        guard compactedWires.isEmpty == false && compactedOperations.isEmpty == false else {
+            logger.info("QASM parsing resulted in empty circuit: \(qasm)")
+            throw QASMParseError.emptyCircuit(message: qasm)
+        }
 
         return ParsedCircuit(wires: compactedWires, operations: compactedOperations)
     }
