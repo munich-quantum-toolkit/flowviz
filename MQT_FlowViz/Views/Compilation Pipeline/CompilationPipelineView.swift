@@ -46,11 +46,14 @@ struct CompilationPipelineView: View {
             let rawEvolutionData = trace.getActionEvolution()
 
             self.timelines = rawEvolutionData.map { data in
-                TimelineSequence(
+
+                return TimelineSequence(
                     title: data.title,
                     stepRanges: data.ranges,
                     backgroundColor: Color.blueBackground,
-                    textColor: Color.bluePrimary
+                    textColor: Color.bluePrimary,
+                    dotmarkHelpText: String(describing: data.type).capitalized,
+                    dotmarkColor: data.type.actionColor
                 )
             }
         }

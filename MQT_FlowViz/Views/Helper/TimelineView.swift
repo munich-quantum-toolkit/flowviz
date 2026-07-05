@@ -55,7 +55,9 @@ struct TimelineView: View {
                             count: phase.countLabel,
                             color: phase.backgroundColor,
                             textColor: phase.textColor,
-                            pillHeight: innerPillHeight
+                            pillHeight: innerPillHeight,
+                            dotmarkHelpText: phase.dotmarkHelpText,
+                            dotmarkColor: phase.dotmarkColor
                         )
                         .frame(height: rowHeight)
                     }
@@ -221,9 +223,37 @@ struct StateBadge: View {
     let textColor: Color
     let pillHeight: CGFloat
 
+    var dotmarkHelpText: String? = nil
+    var dotmarkColor: Color? = nil
+
+    @State private var showActionTooltip: Bool = false
+
     var body: some View {
-        HStack {
-            BoxedTextView(text: title, backgroundColor: color, textColor: textColor)
+        HStack(spacing: 8) {
+            HStack {
+                BoxedTextView(text: title, backgroundColor: color, textColor: textColor)
+
+                if let helpText = dotmarkHelpText, let markColor = dotmarkColor {
+                    Circle()
+                        .fill(markColor)
+                        .frame(width: 7, height: 7)
+                        .help(helpText)
+                        #if os(iOS)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            showActionTooltip.toggle()
+                        }
+                        .popover(isPresented: $showActionTooltip, attachmentAnchor: .point(.bottom), arrowEdge: .bottom) {
+                            Text(helpText)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.primary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .presentationCompactAdaptation(.popover) // Forces it to stay a small popover on iPhone/iPad
+                        }
+                        #endif
+                }
+            }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(count)

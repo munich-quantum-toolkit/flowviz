@@ -73,13 +73,14 @@ final class CompilationTrace: Codable, Identifiable {
     }
 
     /// Collects the actions that were applied throughout the compilation.
-    /// - Returns: An array of tuples containing the action name and its active ranges.
-    func getActionEvolution() -> [(title: String, ranges: [ClosedRange<Int>])] {
+    /// - Returns: An array of tuples containing the action name, its active ranges, and its action type.
+    @MainActor func getActionEvolution() -> [(title: String, ranges: [ClosedRange<Int>], type: ActionType)] {
         guard !steps.isEmpty else { return [] }
 
         let sortedSteps = steps.sorted { $0.stepIndex < $1.stepIndex }
 
         var actionRanges: [String: [ClosedRange<Int>]] = [:]
+        var actionTypes: [String: ActionType] = [:]
         var currentStarts: [String: Int] = [:]
         var previousIndices: [String: Int] = [:]
         var orderedActions: [String] = []
@@ -91,6 +92,7 @@ final class CompilationTrace: Codable, Identifiable {
             if actionRanges[action] == nil {
                 orderedActions.append(action)
                 actionRanges[action] = []
+                actionTypes[action] = step.actionTypeEnum
             }
 
             // Extract current range tracking state
@@ -119,7 +121,11 @@ final class CompilationTrace: Codable, Identifiable {
         }
 
         return orderedActions.map { action in
-            (title: action, ranges: actionRanges[action] ?? [])
+            (
+                title: action,
+                ranges: actionRanges[action] ?? [],
+                type: actionTypes[action] ?? .other("unknown")
+            )
         }
     }
 

@@ -16,6 +16,9 @@ struct TimelineSequence: Identifiable {
     let backgroundColor: Color
     let textColor: Color
 
+    var dotmarkHelpText: String? = nil
+    var dotmarkColor: Color? = nil
+
     /// The total number of steps across all ranges.
     var countLabel: String {
         let totalSteps = stepRanges.reduce(0) { $0 + $1.count }

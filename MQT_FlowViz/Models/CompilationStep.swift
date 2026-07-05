@@ -7,6 +7,7 @@
 
 
 import Foundation
+import SwiftUI
 
 /// An enum containing all supported action types.
 enum ActionType: Hashable, Codable {
@@ -21,8 +22,8 @@ enum ActionType: Hashable, Codable {
     case other(String)
 
     init(stringValue: String) {
-        switch stringValue {
-        case "INITIAL": self = .initial
+        switch stringValue.lowercased() {
+        case "initial": self = .initial
         case "optimization": self = .optimization
         case "synthesis": self = .synthesis
         case "mapping": self = .mapping
@@ -31,6 +32,16 @@ enum ActionType: Hashable, Codable {
         case "final_optimization": self = .finalOptimization
         case "terminate": self = .terminate
         default: self = .other(stringValue)
+        }
+    }
+
+    var actionColor: Color {
+        switch self {
+        case .optimization, .finalOptimization: return .greenPrimary
+        case .synthesis: return .redPrimary
+        case .mapping, .layout, .routing: return .yellowPrimary
+        case .initial, .terminate: return .gray
+        case .other: return .bluePrimary
         }
     }
 }
