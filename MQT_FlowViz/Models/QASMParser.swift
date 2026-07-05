@@ -34,22 +34,23 @@ final class QASMParser {
     /// - Returns: An instance of ``ParsedCircuit`` upon success.
     static func parse(qasm: String) throws -> ParsedCircuit {
         enum WireID: Hashable { case q(Int), c(Int) }
+
         var currentMomentPerWire: [WireID: Int] = [:]
 
-        // Track classical bits that are explicitly used
-        var explicitlyActiveClassicalBits: Set<Int> = []
         // Track qubits that are explicitly defined in the instructions (relevant for barrier and possible other global instructions)
         var explicitlyActiveQubits: Set<Int> = []
-
         var usedClassicalControls: Set<Int> = []
-        var activeIfControlBits: [Int] = [] // Tracks if we are currently inside an 'if' block
+
+        // Tracks if we are currently inside an 'if' block
+        var currentlyActiveIfControlBits: [Int] = []
 
         var operations: [CircuitOperation] = []
 
         let lines = qasm.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }
         var isInsideGateDefinition = false
 
-        // NEW: Pre-scan the entire file to find which classical bits are actually used in 'if' blocks
+        // Pre-scan the entire file to find which classical bits are actually used in 'if' blocks,
+        // enabling us to prevent unnecessary space allocation for measurement operations.
         for line in lines {
             if line.hasPrefix("if") {
                 let cBits = extractAllClassicalBitIntegers(from: line)
@@ -96,9 +97,8 @@ final class QASMParser {
                 continue
             }
             if line.hasPrefix("bit[") || line.hasPrefix("creg ") {
-                if let count = extractFirstInteger(from: line) {
-                    for i in 0..<count { explicitlyActiveClassicalBits.insert(i) }
-                }
+                // We don't need to track raw bit declarations.
+                // The pre-scan above handles the ones we actually care about.
                 continue
             }
 
@@ -107,16 +107,14 @@ final class QASMParser {
                 if let qMatch = match(pattern: "(?:q\\[|\\$)(\\d+)(?:\\])?", in: line),
                    let cMatch = match(pattern: "(?:c|meas)\\[(\\d+)\\]", in: line),
                    let qBit = Int(qMatch), let cBit = Int(cMatch) {
-
                     explicitlyActiveQubits.insert(qBit)
-                    explicitlyActiveClassicalBits.insert(cBit)
 
                     let crossedWires: [WireID]
 
                     // Check if the UI will actually draw a line down for this measurement
                     if usedClassicalControls.contains(cBit) {
                         let crossedQ = explicitlyActiveQubits.filter { $0 >= qBit }.map { WireID.q($0) }
-                        let crossedC = explicitlyActiveClassicalBits.filter { $0 <= cBit }.map { WireID.c($0) }
+                        let crossedC = usedClassicalControls.filter { $0 <= cBit }.map { WireID.c($0) }
                         crossedWires = crossedQ + crossedC
                     } else {
                         // If no classical wire is drawn, this measurement only occupies its own qubit wire
@@ -138,18 +136,14 @@ final class QASMParser {
             if line.hasPrefix("if") {
                 let cBits = extractAllClassicalBitIntegers(from: line)
                 if !cBits.isEmpty {
-                    activeIfControlBits = cBits
-                    for bit in cBits {
-                        explicitlyActiveClassicalBits.insert(bit)
-                        usedClassicalControls.insert(bit)
-                    }
+                    currentlyActiveIfControlBits = cBits
                 }
                 continue
             }
 
             // Exit the if block when closing brace is hit
-            if !activeIfControlBits.isEmpty && line.contains("}") {
-                activeIfControlBits = [] // Clear the array for next line
+            if !currentlyActiveIfControlBits.isEmpty && line.contains("}") {
+                currentlyActiveIfControlBits = [] // Clear the array for next line
                 continue
             }
 
@@ -286,12 +280,12 @@ final class QASMParser {
             let maxQubit = involvedQubits.max() ?? 0
             var crossedWires: [WireID] = []
 
-            if !activeIfControlBits.isEmpty {
+            if !currentlyActiveIfControlBits.isEmpty {
                 // Find the lowest physical classical bit (highest index) so we span the whole distance
-                let maxCBit = activeIfControlBits.max() ?? 0
+                let maxCBit = currentlyActiveIfControlBits.max() ?? 0
 
                 let crossedQ = explicitlyActiveQubits.filter { $0 >= minQubit }.map { WireID.q($0) }
-                let crossedC = explicitlyActiveClassicalBits.filter { $0 <= maxCBit }.map { WireID.c($0) }
+                let crossedC = usedClassicalControls.filter { $0 <= maxCBit }.map { WireID.c($0) }
                 crossedWires = crossedQ + crossedC
             } else {
                 // Standard quantum gate spans between its top and bottom explicitly involved qubits
@@ -302,11 +296,11 @@ final class QASMParser {
 
             // The array is passed directly in instead of the single wrapped bit
             if controls.isEmpty && targets.count == 1 {
-                operations.append(CircuitOperation(type: .singleQubit(target: targets[0], label: gateName, parameter: parameter), momentIndex: finalMoment, classicalControls: activeIfControlBits))
+                operations.append(CircuitOperation(type: .singleQubit(target: targets[0], label: gateName, parameter: parameter), momentIndex: finalMoment, classicalControls: currentlyActiveIfControlBits))
             } else if controls.count == 1 && targets.count == 1 {
-                operations.append(CircuitOperation(type: .multiQubit(control: controls[0], target: targets[0], label: gateName, parameter: parameter), momentIndex: finalMoment, classicalControls: activeIfControlBits))
+                operations.append(CircuitOperation(type: .multiQubit(control: controls[0], target: targets[0], label: gateName, parameter: parameter), momentIndex: finalMoment, classicalControls: currentlyActiveIfControlBits))
             } else {
-                operations.append(CircuitOperation(type: .nQubit(controls: controls, targets: targets, label: gateName), momentIndex: finalMoment, classicalControls: activeIfControlBits))
+                operations.append(CircuitOperation(type: .nQubit(controls: controls, targets: targets, label: gateName), momentIndex: finalMoment, classicalControls: currentlyActiveIfControlBits))
             }
 
             // Advance the moment for every wire that is physically crossed to prevent overlaps
