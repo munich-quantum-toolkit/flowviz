@@ -24,7 +24,7 @@ struct TooltipMetricsView: View {
             Label(String(format: "Depth: %.2f", currentStep.rawCriticalDepth), systemImage: "arrow.down.to.line.compact")
             Label(String(format: "Parallelism: %.2f", currentStep.parallelism), systemImage: "bolt")
             Label(String(format: "Liveness: %.2f", currentStep.liveness), systemImage: "waveform.path.ecg")
-            Label(String(format: "Entanglement: %.2f", currentStep.entanglementRatio), systemImage: "point.3.connected.trianglepath.dotted")
+            Label(String(format: "Entanglement: %.2f", currentStep.entanglementRatio), systemImage: "camera.filters")
         }
         .foregroundStyle(.black)
         .font(tooltipFont.weight(.regular))

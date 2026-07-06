@@ -39,6 +39,7 @@ struct IconizedRowView<DetailContent: View>: View {
             Image(systemName: icon)
                 .font(.body.weight(.semibold))
                 .frame(width: 20)
+                .symbolRenderingMode(.monochrome)
 
             Text(title)
                 .font(.subheadline.weight(.medium))

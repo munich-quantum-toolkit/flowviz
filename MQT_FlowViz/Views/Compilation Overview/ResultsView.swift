@@ -78,7 +78,7 @@ struct ResultsView: View {
                 let entanglementRatio = finalStep?.entanglementRatio
                 ResultRowView(
                     traceId: trace.id,
-                    icon: "point.3.connected.trianglepath.dotted",
+                    icon: "camera.filters",
                     title: "Entanglement Ratio",
                     valueText: entanglementRatio != nil ? String(format: "%.2f", entanglementRatio!) : "N/A",
                     gaugeValue: entanglementRatio,
