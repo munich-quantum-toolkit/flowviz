@@ -91,18 +91,18 @@ struct EvolutionComparisonView: View {
 
     @ViewBuilder
     private func circuitPanel(step: Binding<Int>, circuit: ParsedCircuit?, parseError: String?) -> some View {
-        let isValid = step.wrappedValue >= 0 && step.wrappedValue < trace.steps.count
-        let actionName = isValid ? trace.steps[step.wrappedValue].actionName : "Unknown Action"
+        let currentStep = (step.wrappedValue >= 0 && step.wrappedValue < trace.steps.count) ? trace.steps[step.wrappedValue] : nil
+        let actionName = currentStep?.actionName ?? "Unknown Action"
+        let actionType = currentStep?.actionType ?? "Unknown"
+        let actionTypeEnum = currentStep?.actionTypeEnum
 
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                if isValid, let parsed = circuit {
+                if let currentStep = currentStep, let parsed = circuit {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 18) {
-                            let currentStep = trace.steps[step.wrappedValue]
-
                             Label("\(parsed.operations.count) Ops", systemImage: "cpu")
-                            Label("\(parsed.wires.count(where: { $0.isClassical == false})) Qubits", systemImage: "circle.dotted.and.circle")
+                            Label("\(parsed.wires.count(where: { !$0.isClassical })) Qubits", systemImage: "circle.dotted.and.circle")
                             Label(String(format: "Depth %.2f", currentStep.rawCriticalDepth), systemImage: "arrow.down.to.line.compact")
                             Label(String(format: "Parallelism %.2f", currentStep.parallelism), systemImage: "bolt")
                             Label(String(format: "Liveness %.2f", currentStep.liveness), systemImage: "waveform.path.ecg")
@@ -127,7 +127,7 @@ struct EvolutionComparisonView: View {
                 )
             }
 
-            DashboardCardView(title: actionName) {
+            DashboardCardView(title: actionName, dotmarkColor: actionTypeEnum?.actionColor, dotmarkHelpText: actionType.capitalized) {
                 VStack(alignment: .center, spacing: 16) {
                     if let circuit = circuit {
                         CanvasRenderView(
