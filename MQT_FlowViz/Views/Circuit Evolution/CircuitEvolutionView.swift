@@ -12,8 +12,8 @@ struct CircuitEvolutionView: View {
     @State var currentCircuit: ParsedCircuit? = nil
     @State var parseError: String? = nil
 
-    var currentActionName: String {
-        currentStep >= 0 && currentStep < trace.steps.count ? trace.steps[currentStep].actionName : "Unknown Action"
+    var currentActionInformation: CompilationStep? {
+        currentStep >= 0 && currentStep < trace.steps.count ? trace.steps[currentStep] : nil
     }
 
     // UI Constants for Canvas Alignment
@@ -41,7 +41,7 @@ struct CircuitEvolutionView: View {
                 .buttonStyle(.plain)
             }
 
-            DashboardCardView(title: currentActionName) {
+            DashboardCardView(title: currentActionInformation?.actionName ?? "Unknown Action", dotmarkColor: currentActionInformation?.actionTypeEnum.actionColor, dotmarkHelpText: currentActionInformation?.actionType.capitalized) {
                 VStack(alignment: .center, spacing: 16) {
                     if let circuit = currentCircuit {
                         CanvasRenderView(

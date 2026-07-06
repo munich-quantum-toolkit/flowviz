@@ -230,30 +230,28 @@ struct StateBadge: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            HStack {
-                BoxedTextView(text: title, backgroundColor: color, textColor: textColor)
-
-                if let helpText = dotmarkHelpText, let markColor = dotmarkColor {
-                    Circle()
-                        .fill(markColor)
-                        .frame(width: 7, height: 7)
-                        .help(helpText)
-                        #if os(iOS)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            showActionTooltip.toggle()
-                        }
-                        .popover(isPresented: $showActionTooltip, attachmentAnchor: .point(.bottom), arrowEdge: .bottom) {
-                            Text(helpText)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.primary)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .presentationCompactAdaptation(.popover) // Forces it to stay a small popover on iPhone/iPad
-                        }
-                        #endif
-                }
+            if let helpText = dotmarkHelpText, let markColor = dotmarkColor {
+                Circle()
+                    .fill(markColor)
+                    .frame(width: 7, height: 7)
+                    .help(helpText)
+                    #if os(iOS)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        showActionTooltip.toggle()
+                    }
+                    .popover(isPresented: $showActionTooltip, attachmentAnchor: .point(.bottom), arrowEdge: .bottom) {
+                        Text(helpText)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.primary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .presentationCompactAdaptation(.popover) // Forces it to stay a small popover on iPhone/iPad
+                    }
+                    #endif
             }
+            
+            BoxedTextView(text: title, backgroundColor: color, textColor: textColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(count)
