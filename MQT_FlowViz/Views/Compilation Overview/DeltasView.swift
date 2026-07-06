@@ -9,7 +9,10 @@ import SwiftUI
 
 struct DeltasView: View {
     let trace: CompilationTrace
+
     @State private var insertedSwaps: Int? = nil
+    @State private var initialMultiQubits: Int? = nil
+    @State private var finalMultiQubits: Int? = nil
 
     var body: some View {
         DashboardCardView(title: "Deltas") {
@@ -30,13 +33,13 @@ struct DeltasView: View {
 
                     Divider()
 
-                    // 2. Gates
+                    // 2. Total Gates
                     let initialGates = initialStep.totalGates
                     let finalGates = finalStep.totalGates
 
                     DeltaRowView(
                         icon: "cpu",
-                        title: "Gates",
+                        title: "Total Gates",
                         initialValue: "\(initialGates)",
                         finalValue: "\(finalGates)",
                         boxColors: getGatesColor(from: initialGates, to: finalGates)
@@ -58,7 +61,20 @@ struct DeltasView: View {
 
                     Divider()
 
-                    // 4. Swaps
+                    // 4. Multi-Qubit Gates
+                    DeltaRowView(
+                        icon: "point.3.connected.trianglepath.dotted",
+                        title: "Multi-Qubit",
+                        initialValue: initialMultiQubits != nil ? "\(initialMultiQubits!)" : nil,
+                        finalValue: finalMultiQubits != nil ? "\(finalMultiQubits!)" : "N/A",
+                        boxColors: (initialMultiQubits != nil && finalMultiQubits != nil)
+                        ? getMultiQubitGatesColor(from: initialMultiQubits!, to: finalMultiQubits!)
+                        : (.bluePrimary, .blueBackground)
+                    )
+
+                    Divider()
+
+                    // 5. Swaps
                     DeltaRowView(
                         icon: "arrow.up.arrow.down",
                         title: "Swaps",
@@ -67,11 +83,22 @@ struct DeltasView: View {
                         boxColors: insertedSwaps == 0 ? (.greenPrimary, .greenBackground) : (.redPrimary, .redBackground)
                     )
                 }
-                .task(id: finalStep.circuitQasm3) {
-                    let count = await Self.calculateSwapGates(for: finalStep.circuitQasm3)
+                .task(id: trace.id) {
+                    let finalQasm = finalStep.circuitQasm3
+                    let initialQasm = initialStep.circuitQasm3
+
+                    let (swaps, initialMulti, finalMulti) = await Task.detached {
+                        let s = await calculateSwapGates(for: finalQasm)
+                        let i = await calculateMultiQubitGates(for: initialQasm)
+                        let f = await calculateMultiQubitGates(for: finalQasm)
+
+                        return (s, i, f)
+                    }.value
 
                     withAnimation(.easeInOut(duration: 0.2)) {
-                        self.insertedSwaps = count
+                        self.insertedSwaps = swaps
+                        self.initialMultiQubits = initialMulti
+                        self.finalMultiQubits = finalMulti
                     }
                 }
             }
@@ -109,14 +136,38 @@ struct DeltasView: View {
         return (.greenPrimary, .greenBackground)
     }
 
-    // nonisolated to allow for background processing
-    nonisolated private static func calculateSwapGates(for qasm: String) async -> Int {
+    func getMultiQubitGatesColor(from initial: Int, to final: Int) -> (textColor: Color, backgroundColor: Color) {
+        guard initial > 0 else { return (.bluePrimary, .blueBackground) }
+        let ratio = Double(final) / Double(initial)
+
+        if ratio >= 2.0 {
+            return (.redPrimary, .redBackground)
+        } else if ratio >= 2.0 {
+            return (.yellowPrimary, .yellowBackground)
+        }
+        return (.greenPrimary, .greenBackground)
+    }
+
+    func calculateSwapGates(for qasm: String) async -> Int {
         let tokens = qasm.components(separatedBy: .whitespacesAndNewlines)
 
         // Simply count how many times "swap" or "cswap" appears as an exact token
         return tokens.count { token in
             let lower = token.lowercased()
             return lower == "swap" || lower == "cswap"
+        }
+    }
+
+    func calculateMultiQubitGates(for qasm: String) async -> Int? {
+        guard let circuit = try? QASMParser.parse(qasm: qasm) else { return nil }
+
+        return circuit.operations.reduce(0) { count, op in
+            switch op.type {
+            case .multiQubit, .nQubit:
+                return count + 1
+            default:
+                return count
+            }
         }
     }
 }
@@ -150,7 +201,7 @@ struct DeltaRowView: View {
                     .font(.caption.bold())
                     .foregroundStyle(boxColors.textColor)
                     .padding(6)
-                    .frame(width: 40)
+                    .frame(minWidth: 40)
                     .background(boxColors.backgroundColor)
                     .cornerRadius(8)
             }
