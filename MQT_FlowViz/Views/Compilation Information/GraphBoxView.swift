@@ -17,8 +17,8 @@ struct GraphBoxView: View {
     let chartMaxValue: Float
     let chartMinValue: Float
 
-    private let stepDataMap: [Int: [PlottableDataPoint]]
-    private let flatData: [PlottableDataPoint]
+    let stepDataMap: [Int: [PlottableDataPoint]]
+    let flatData: [PlottableDataPoint]
 
     init(title: String, seriesData: [ChartDataSet]) {
         self.title = title
