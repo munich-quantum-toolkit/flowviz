@@ -11,7 +11,6 @@ import UniformTypeIdentifiers
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var dataHandler = DataHandler()
     @State private var selectedTrace: CompilationTrace?
     @State private var isShowingFilePicker = false
     @State private var isShowingErrorAlert = false
@@ -59,7 +58,7 @@ struct ContentView: View {
         case .success(let urls):
             if let selectedURL = urls.first {
                 do {
-                    try dataHandler.importTrace(from: selectedURL, into: modelContext)
+                    try DataHandler.importTrace(from: selectedURL, into: modelContext)
                 } catch {
                     errorMessage = error.localizedDescription
                     isShowingErrorAlert = true
