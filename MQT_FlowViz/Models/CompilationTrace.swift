@@ -69,6 +69,7 @@ final class CompilationTrace: Codable, Identifiable {
         try container.encode(device, forKey: .device)
         try container.encode(schemaVersion, forKey: .schemaVersion)
         try container.encode(timestamp, forKey: .timestamp)
+        try container.encode(totalDuration, forKey: .totalDuration)
         try container.encode(steps, forKey: .steps)
     }
 
