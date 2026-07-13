@@ -91,8 +91,9 @@ MQT FlowViz is a native macOS/iPadOS application. To run the app on your device:
 2. Open the project in **Xcode**.
 3. Select your target device (Mac or iPad) and hit `Cmd + R` to build and run the application.
 
-> Note:
+> [!NOTE]
 > FlowViz requires previously exported compilation trace files (`.json`) generated explicitly by the `mqt.predictor` framework to visualize data. Ensure you have exported a valid predictor trace from the Python framework before using the app.
+> Refer to the MQT Predictor's [Getting Started](https://github.com/munich-quantum-toolkit/predictor/blob/main/README.md#getting-started) section for more information.
 
 ## System Requirements
 
