@@ -103,15 +103,16 @@ struct GraphBoxView: View {
                             ForEach(currentData) { item in
                                 HStack(spacing: 6) {
                                     // Differentiate shapes based on state
-                                    if item.unavailable {
+                                    switch item.kind {
+                                    case .unavailable:
                                         BasicChartSymbolShape.cross
                                             .fill(item.seriesColor)
                                             .frame(width: 8, height: 8)
-                                    } else if item.tentative {
+                                    case .approximate:
                                         BasicChartSymbolShape.triangle
                                             .fill(item.seriesColor)
                                             .frame(width: 8, height: 8)
-                                    } else {
+                                    case .exact:
                                         BasicChartSymbolShape.circle
                                             .fill(item.seriesColor)
                                             .frame(width: 8, height: 8)
@@ -136,9 +137,9 @@ struct GraphBoxView: View {
             }
             .chartForegroundStyleScale(domain: chartDomain, range: chartColorRange)
             .chartSymbolScale([
-                "Unavailable": BasicChartSymbolShape.cross,
-                "Tentative": BasicChartSymbolShape.triangle,
-                "Final": BasicChartSymbolShape.circle
+                MetricKind.unavailable.displayName: BasicChartSymbolShape.cross,
+                MetricKind.approximate.displayName: BasicChartSymbolShape.triangle,
+                MetricKind.exact.displayName: BasicChartSymbolShape.circle
             ])
             .chartLegend(seriesData.count > 1 ? .visible : .hidden)
             .chartLegend(position: .bottom, alignment: .leading) {

@@ -81,19 +81,19 @@ struct CompilationInformationView: View {
                 let index = step.stepIndex
 
                 let fidelity = step.figuresOfMerit.expectedFidelity
-                tempExpectedFidelity.append(ChartDataPoint(step: index, value: Float(fidelity.value), tentative: fidelity.tentative, unavailable: fidelity.unavailable))
+                tempExpectedFidelity.append(ChartDataPoint(step: index, value: Float(fidelity.value), kind: fidelity.kind))
 
                 let criticalDepth = step.figuresOfMerit.criticalDepth
-                tempCriticalDepth.append(ChartDataPoint(step: index, value: Float(criticalDepth.value), tentative: criticalDepth.tentative, unavailable: criticalDepth.unavailable))
+                tempCriticalDepth.append(ChartDataPoint(step: index, value: Float(criticalDepth.value), kind: criticalDepth.kind))
 
                 if let hellingerDistance = step.figuresOfMerit.estimatedHellingerDistance {
-                    tempHellingerDistance.append(ChartDataPoint(step: index, value: Float(hellingerDistance.value), tentative: hellingerDistance.tentative, unavailable: hellingerDistance.unavailable))
+                    tempHellingerDistance.append(ChartDataPoint(step: index, value: Float(hellingerDistance.value), kind: hellingerDistance.kind))
                 } else {
                     tempHellingerDistance.append(nil)
                 }
 
                 if let esp = step.figuresOfMerit.estimatedSuccessProbability {
-                    tempEstimatedSuccessProbability.append(ChartDataPoint(step: index, value: Float(esp.value), tentative: esp.tentative, unavailable: esp.unavailable))
+                    tempEstimatedSuccessProbability.append(ChartDataPoint(step: index, value: Float(esp.value), kind: esp.kind))
                 } else {
                     tempEstimatedSuccessProbability.append(nil)
                 }

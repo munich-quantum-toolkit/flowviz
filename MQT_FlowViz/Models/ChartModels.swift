@@ -10,15 +10,14 @@ import SwiftUI
 struct ChartDataPoint: Identifiable {
     let step: Int
     let value: Float
-    let tentative: Bool
-    let unavailable: Bool
+    let kind: MetricKind
+
     var id: Int { step }
 
-    init(step: Int, value: Float, tentative: Bool = false, unavailable: Bool = false) {
+    init(step: Int, value: Float, kind: MetricKind = .exact) {
         self.step = step
         self.value = value
-        self.tentative = tentative
-        self.unavailable = unavailable
+        self.kind = kind
     }
 }
 
@@ -37,19 +36,14 @@ struct PlottableDataPoint: Identifiable {
     let seriesColor: Color
     let step: Int
     let value: Float
-    let tentative: Bool
-    let unavailable: Bool
+    let kind: MetricKind
 
     // Stable ID combining the series name and the step (e.g., "Expected Fidelity-5")
     // This is important for performance, do not use a UUID here since PlottableDataPoints are
     // initialized directly in the init of GraphBoxView.
     var id: String { "\(seriesName)-\(step)" }
 
-    var symbolState: String {
-        if unavailable { return "Unavailable" }
-        if tentative { return "Tentative" }
-        return "Final"
-    }
+    var symbolState: String { kind.rawValue.capitalized }
 }
 
 extension Array where Element == ChartDataSet {
@@ -62,8 +56,7 @@ extension Array where Element == ChartDataSet {
                     seriesColor: dataset.color,
                     step: point.step,
                     value: point.value,
-                    tentative: point.tentative,
-                    unavailable: point.unavailable
+                    kind: point.kind
                 )
             }
         }
