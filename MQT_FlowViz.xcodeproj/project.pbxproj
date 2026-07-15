@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		28E666822F9B63A60039E0DC /* MQT_FlowViz.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MQT_FlowViz.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		28E666822F9B63A60039E0DC /* MQT FlowViz.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MQT FlowViz.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -40,7 +40,7 @@
 		28E666832F9B63A60039E0DC /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				28E666822F9B63A60039E0DC /* MQT_FlowViz.app */,
+				28E666822F9B63A60039E0DC /* MQT FlowViz.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		28E666812F9B63A60039E0DC /* MQT_FlowViz */ = {
+		28E666812F9B63A60039E0DC /* MQT FlowViz */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 28E6668D2F9B63A80039E0DC /* Build configuration list for PBXNativeTarget "MQT_FlowViz" */;
+			buildConfigurationList = 28E6668D2F9B63A80039E0DC /* Build configuration list for PBXNativeTarget "MQT FlowViz" */;
 			buildPhases = (
 				28E6667E2F9B63A60039E0DC /* Sources */,
 				28E6667F2F9B63A60039E0DC /* Frameworks */,
@@ -63,11 +63,11 @@
 			fileSystemSynchronizedGroups = (
 				28E666842F9B63A60039E0DC /* MQT_FlowViz */,
 			);
-			name = MQT_FlowViz;
+			name = "MQT FlowViz";
 			packageProductDependencies = (
 			);
 			productName = "predictor-visualizer";
-			productReference = 28E666822F9B63A60039E0DC /* MQT_FlowViz.app */;
+			productReference = 28E666822F9B63A60039E0DC /* MQT FlowViz.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				28E666812F9B63A60039E0DC /* MQT_FlowViz */,
+				28E666812F9B63A60039E0DC /* MQT FlowViz */,
 			);
 		};
 /* End PBXProject section */
@@ -359,7 +359,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		28E6668D2F9B63A80039E0DC /* Build configuration list for PBXNativeTarget "MQT_FlowViz" */ = {
+		28E6668D2F9B63A80039E0DC /* Build configuration list for PBXNativeTarget "MQT FlowViz" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				28E6668E2F9B63A80039E0DC /* Debug */,
