@@ -53,8 +53,8 @@ ecosystem, which is being developed as part of the
 Thank you to all the contributors who have helped make MQT FlowViz a reality!
 
 <p align="center">
-  <a href="https://github.com/munich-quantum-toolkit/[REPO_NAME]/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=munich-quantum-toolkit/[REPO_NAME]" alt="Contributors to munich-quantum-toolkit/flowviz" />
+  <a href="https://github.com/munich-quantum-toolkit/flowviz/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=munich-quantum-toolkit/flowviz" alt="Contributors to munich-quantum-toolkit/flowviz" />
   </a>
 </p>
 
