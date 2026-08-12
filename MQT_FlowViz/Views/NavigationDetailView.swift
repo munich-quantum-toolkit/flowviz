@@ -10,6 +10,7 @@ import SwiftUI
 struct NavigationDetailView: View {
     let currentTrace: CompilationTrace
     @State var selectedStep: Int = 0
+    @State private var exportURL: URL?
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: true) {
@@ -47,9 +48,33 @@ struct NavigationDetailView: View {
                 )
                 .padding([.leading, .trailing], 12)
             }
+
+            ToolbarSpacer(.fixed)
+
+            ToolbarItem(placement: .primaryAction) {
+                // ShareLink accepts the URL of a file to be shared
+                if let url = exportURL {
+                    ShareLink(item: url) {
+                        Image(systemName: "square.and.arrow.up")
+                            .fontWeight(.medium)
+                    }
+                    .help("Export Trace as JSON")
+                    .buttonStyle(.bordered)
+                    .foregroundStyle(.black)
+                } else {
+                    // Fallback while generating or if generation fails
+                    Image(systemName: "square.and.arrow.up")
+                        .fontWeight(.medium)
+                        .foregroundColor(.black)
+                }
+            }
         }
-        .onChange(of: currentTrace) { _, _ in
+        .onAppear {
+            exportURL = try? DataHandler.generateExportURL(for: currentTrace)
+        }
+        .onChange(of: currentTrace) { _, newTrace in
             selectedStep = 0
+            exportURL = try? DataHandler.generateExportURL(for: newTrace)
         }
     }
 }
