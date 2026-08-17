@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct PlaceholderView: View {
-    var body: some View {
-        Text("Select a compilation from the sidebar to view details.")
-            .foregroundColor(.secondary)
-    }
+  var body: some View {
+    Text("Select a compilation from the sidebar to view details.")
+      .foregroundColor(.secondary)
+  }
 }
 
 #Preview {
-    PlaceholderView()
+  PlaceholderView()
 }

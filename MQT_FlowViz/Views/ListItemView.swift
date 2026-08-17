@@ -7,33 +7,35 @@
 import SwiftUI
 
 struct ListItemView: View {
-    let trace: CompilationTrace
+  let trace: CompilationTrace
 
-    var compilationDate: String {
-        Date(timeIntervalSince1970: trace.timestamp)
-            .formatted(date: .numeric, time: .omitted)
+  var compilationDate: String {
+    Date(timeIntervalSince1970: trace.timestamp)
+      .formatted(date: .numeric, time: .omitted)
+  }
+
+  var body: some View {
+    HStack {
+      VStack(alignment: .leading, spacing: 8) {
+        Text(trace.circuitName)
+          .font(.headline)
+        Text(
+          trace.device.formattedDeviceName + ", " + trace.device.deviceQubits.description
+            + " qubits"
+        )
+        .font(.caption)
+        .foregroundColor(.secondary)
+      }
+
+      Spacer()
+
+      Image(systemName: "chevron.right")
+        .foregroundStyle(Color.primary)
     }
-
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(trace.circuitName)
-                    .font(.headline)
-                Text(trace.device.formattedDeviceName + ", " + trace.device.deviceQubits.description + " qubits")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .foregroundStyle(Color.primary)
-        }
-        .padding([.top, .bottom], 4)
-    }
+    .padding([.top, .bottom], 4)
+  }
 }
 
 #Preview {
-    ListItemView(trace: CompilationTrace.previewMock)
+  ListItemView(trace: CompilationTrace.previewMock)
 }
-
