@@ -8,19 +8,19 @@
 import SwiftUI
 
 struct QubitView: View {
-    let qubitNumber: String
+  let qubitNumber: String
 
-    var body: some View {
-        Text(qubitNumber)
-            .font(.system(size: 13, weight: .semibold))
-            .foregroundStyle(Color.bluePrimary)
-            .padding(8)
-            .background(Color.blueBackground)
-            .cornerRadius(.greatestFiniteMagnitude)
-    }
+  var body: some View {
+    Text(qubitNumber)
+      .font(.system(size: 13, weight: .semibold))
+      .foregroundStyle(Color.bluePrimary)
+      .padding(8)
+      .background(Color.blueBackground)
+      .cornerRadius(.greatestFiniteMagnitude)
+  }
 }
 
 #Preview {
-    QubitView(qubitNumber: "00")
-        .padding()
+  QubitView(qubitNumber: "00")
+    .padding()
 }

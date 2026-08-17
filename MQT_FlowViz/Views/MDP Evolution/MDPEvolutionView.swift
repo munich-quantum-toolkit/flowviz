@@ -8,53 +8,53 @@
 import SwiftUI
 
 struct MDPEvolutionView: View {
-    let trace: CompilationTrace
-    @Binding var selectedStep: Int
-    @State var timelines: [TimelineSequence] = []
+  let trace: CompilationTrace
+  @Binding var selectedStep: Int
+  @State var timelines: [TimelineSequence] = []
 
-    init(trace: CompilationTrace, selectedStep: Binding<Int>) {
-        self.trace = trace
-        self._selectedStep = selectedStep
+  init(trace: CompilationTrace, selectedStep: Binding<Int>) {
+    self.trace = trace
+    self._selectedStep = selectedStep
+  }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 24) {
+      Text("Markov-Decision-Process Evolution")
+        .font(.title2.bold())
+
+      DashboardCardView(title: "Circuit State") {
+        TimelineView(sequences: timelines, highlightedStep: $selectedStep, steps: trace.steps)
+      }
     }
+    .task(id: trace.id) {
+      let (synthesizedRanges, laidOutRanges, routedRanges) = trace.getMDPStateEvolution()
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            Text("Markov-Decision-Process Evolution")
-                .font(.title2.bold())
-
-            DashboardCardView(title: "Circuit State") {
-                TimelineView(sequences: timelines, highlightedStep: $selectedStep, steps: trace.steps)
-            }
-        }
-        .task(id: trace.id) {
-            let (synthesizedRanges, laidOutRanges, routedRanges) = trace.getMDPStateEvolution()
-
-            await MainActor.run {
-                self.timelines = [
-                    TimelineSequence(
-                        title: "Synthesized",
-                        stepRanges: synthesizedRanges,
-                        backgroundColor: Color.redBackground,
-                        textColor: Color.redPrimary
-                    ),
-                    TimelineSequence(
-                        title: "Laid Out",
-                        stepRanges: laidOutRanges,
-                        backgroundColor: Color.yellowBackground,
-                        textColor: Color.yellowPrimary
-                    ),
-                    TimelineSequence(
-                        title: "Routed",
-                        stepRanges: routedRanges,
-                        backgroundColor: Color.greenBackground,
-                        textColor: Color.greenPrimary
-                    )
-                ]
-            }
-        }
+      await MainActor.run {
+        self.timelines = [
+          TimelineSequence(
+            title: "Synthesized",
+            stepRanges: synthesizedRanges,
+            backgroundColor: Color.redBackground,
+            textColor: Color.redPrimary
+          ),
+          TimelineSequence(
+            title: "Laid Out",
+            stepRanges: laidOutRanges,
+            backgroundColor: Color.yellowBackground,
+            textColor: Color.yellowPrimary
+          ),
+          TimelineSequence(
+            title: "Routed",
+            stepRanges: routedRanges,
+            backgroundColor: Color.greenBackground,
+            textColor: Color.greenPrimary
+          ),
+        ]
+      }
     }
+  }
 }
 
 #Preview {
-    MDPEvolutionView(trace: CompilationTrace.previewMock, selectedStep: .constant(0))
+  MDPEvolutionView(trace: CompilationTrace.previewMock, selectedStep: .constant(0))
 }

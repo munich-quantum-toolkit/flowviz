@@ -8,27 +8,30 @@
 import SwiftUI
 
 struct BoxedTextView: View {
-    let text: String
-    let backgroundColor: Color
-    let textColor: Color
+  let text: String
+  let backgroundColor: Color
+  let textColor: Color
 
-    init(text: String, backgroundColor: Color = Color.blueBackground, textColor: Color = Color.bluePrimary) {
-        self.text = text
-        self.backgroundColor = backgroundColor
-        self.textColor = textColor
-    }
+  init(
+    text: String, backgroundColor: Color = Color.blueBackground,
+    textColor: Color = Color.bluePrimary
+  ) {
+    self.text = text
+    self.backgroundColor = backgroundColor
+    self.textColor = textColor
+  }
 
-    var body: some View {
-        Text(text)
-            .font(.caption.bold())
-            .foregroundStyle(textColor)
-            .padding(8)
-            .background(backgroundColor)
-            .cornerRadius(8)
-    }
+  var body: some View {
+    Text(text)
+      .font(.caption.bold())
+      .foregroundStyle(textColor)
+      .padding(8)
+      .background(backgroundColor)
+      .cornerRadius(8)
+  }
 }
 
 #Preview {
-    BoxedTextView(text: "RZ(-0.634)")
-        .padding()
+  BoxedTextView(text: "RZ(-0.634)")
+    .padding()
 }
