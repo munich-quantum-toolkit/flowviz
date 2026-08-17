@@ -9,8 +9,8 @@ import SwiftUI
 struct CircuitEvolutionView: View {
   let trace: CompilationTrace
   let currentStep: Int
-  @State var currentCircuit: ParsedCircuit? = nil
-  @State var parseError: String? = nil
+  @State private var currentCircuit: ParsedCircuit? = nil
+  @State private var parseError: String? = nil
 
   var currentActionInformation: CompilationStep? {
     currentStep >= 0 && currentStep < trace.steps.count ? trace.steps[currentStep] : nil

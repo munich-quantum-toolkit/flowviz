@@ -149,7 +149,7 @@ struct DeltasView: View {
 
     if ratio >= 2.0 {
       return (.redPrimary, .redBackground)
-    } else if ratio >= 2.0 {
+    } else if ratio > 1.0 {
       return (.yellowPrimary, .yellowBackground)
     }
     return (.greenPrimary, .greenBackground)

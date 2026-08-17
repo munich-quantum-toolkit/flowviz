@@ -312,14 +312,22 @@ struct CanvasRenderView: View {
 }
 
 #Preview {
+  let parsedCircuit = Result {
+    try QASMParser.parse(qasm: CompilationTrace.previewMock.steps[8].circuitQasm3)
+  }
+
   ZStack {
     Color.white
-    CanvasRenderView(
-      currentCircuit: try! QASMParser.parse(
-        qasm: CompilationTrace.previewMock.steps[8].circuitQasm3),
-      rowHeight: 40,
-      defaultColumnWidth: 40
-    )
-    .padding()
+    switch parsedCircuit {
+    case .success(let circuit):
+      CanvasRenderView(
+        currentCircuit: circuit,
+        rowHeight: 40,
+        defaultColumnWidth: 40
+      )
+      .padding()
+    case .failure(let error):
+      ParsingErrorView(error: error.localizedDescription)
+    }
   }
 }

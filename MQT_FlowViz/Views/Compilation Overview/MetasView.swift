@@ -23,7 +23,7 @@ struct MetasView: View {
         Divider()
 
         // 2. Total Actions
-        let totalActions = trace.steps.count - 1
+        let totalActions = max(trace.steps.count - 1, 0)
 
         IconizedRowView(
           icon: "sum",

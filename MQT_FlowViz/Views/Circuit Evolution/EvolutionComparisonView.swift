@@ -9,18 +9,18 @@ import SwiftUI
 struct EvolutionComparisonView: View {
   let trace: CompilationTrace
 
-  @State var currentStep: Int
-  @State var comparedStep: Int
-  @State var layoutHorizontal: Bool
+  @State private var currentStep: Int
+  @State private var comparedStep: Int
+  @State private var layoutHorizontal: Bool
 
-  @State var isLinked: Bool = false
+  @State private var isLinked: Bool = false
   @State private var isSyncing: Bool = false
 
   @State private var currentCircuit: ParsedCircuit? = nil
   @State private var comparedCircuit: ParsedCircuit? = nil
 
-  @State var parseErrorCurrentCircuit: String? = nil
-  @State var parseErrorComparedCircuit: String? = nil
+  @State private var parseErrorCurrentCircuit: String? = nil
+  @State private var parseErrorComparedCircuit: String? = nil
 
   let rowHeight: CGFloat = 40
   let minColumnWidth: CGFloat = 50
