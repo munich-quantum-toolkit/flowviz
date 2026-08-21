@@ -15,6 +15,16 @@ struct ActionStepperView: View {
   @FocusState private var isFocused: Bool
 
   var body: some View {
+    if totalSteps == 0 {
+      Text("No compilation steps")
+        .font(.callout.weight(.semibold))
+        .foregroundStyle(.secondary)
+    } else {
+      stepControls
+    }
+  }
+
+  private var stepControls: some View {
     HStack(alignment: .center, spacing: 8) {
 
       // --- PREVIOUS BUTTON ---

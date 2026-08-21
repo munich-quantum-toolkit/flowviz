@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NavigationDetailView: View {
   let currentTrace: CompilationTrace
-  @State var selectedStep: Int = 0
+  @State private var selectedStep: Int = 0
   @State private var exportURL: URL?
 
   var body: some View {
