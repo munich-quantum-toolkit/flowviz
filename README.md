@@ -84,10 +84,10 @@ MQT FlowViz is a native macOS/iPadOS application. To run the app on your device:
 
 1. Clone the repository
 2. Open the project in **Xcode**
-3. Select your target device (Mac or iPad) and hit `Cmd + R` to build and run
-   the application.
-4. When running on a physical iPad, select your personal team in the MQT
+3. When running on a physical iPad, select your personal team in the MQT
    FlowViz target's **Signing & Capabilities** section.
+4. Select your target device (Mac or iPad) and hit `Cmd + R` to build and run
+   the application.
 
 > [!NOTE]
 > FlowViz requires previously exported compilation trace files (`.json`) generated explicitly by the `mqt.predictor` framework to visualize data. Ensure you have exported a valid predictor trace from the Python framework before using the app.

@@ -48,7 +48,13 @@ struct CircuitEvolutionView: View {
         dotmarkHelpText: currentActionInformation?.actionType.capitalized
       ) {
         VStack(alignment: .center, spacing: 16) {
-          if let circuit = currentCircuit {
+          if currentActionInformation == nil {
+            Text(trace.steps.isEmpty ? "No compilation steps" : "No compilation step selected")
+              .font(.callout.weight(.semibold))
+              .foregroundStyle(.secondary)
+              .frame(maxWidth: .infinity)
+              .frame(height: 200)
+          } else if let circuit = currentCircuit {
             CanvasRenderView(
               currentCircuit: circuit,
               rowHeight: rowHeight,
@@ -81,12 +87,16 @@ struct CircuitEvolutionView: View {
   }
 
   private func loadCircuit() {
-    guard currentStep >= 0 && currentStep < trace.steps.count else { return }
+    guard let currentActionInformation else {
+      currentCircuit = nil
+      parseError = nil
+      return
+    }
 
     withAnimation(.easeInOut(duration: 0.2)) {
       do {
         parseError = nil  // Reset error state
-        currentCircuit = try QASMParser.parse(qasm: trace.steps[currentStep].circuitQasm3)
+        currentCircuit = try QASMParser.parse(qasm: currentActionInformation.circuitQasm3)
       } catch {
         currentCircuit = nil
         parseError = error.localizedDescription
