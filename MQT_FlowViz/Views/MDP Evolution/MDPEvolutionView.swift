@@ -10,7 +10,7 @@ import SwiftUI
 struct MDPEvolutionView: View {
   let trace: CompilationTrace
   @Binding var selectedStep: Int
-  @State var timelines: [TimelineSequence] = []
+  @State private var timelines: [TimelineSequence] = []
 
   init(trace: CompilationTrace, selectedStep: Binding<Int>) {
     self.trace = trace
@@ -23,7 +23,13 @@ struct MDPEvolutionView: View {
         .font(.title2.bold())
 
       DashboardCardView(title: "Circuit State") {
-        TimelineView(sequences: timelines, highlightedStep: $selectedStep, steps: trace.steps)
+        if timelines.contains(where: { !$0.stepRanges.isEmpty }) {
+          TimelineView(sequences: timelines, highlightedStep: $selectedStep, steps: trace.steps)
+        } else {
+          Text("No MDP state evolution available")
+            .font(.callout.weight(.semibold))
+            .foregroundStyle(.secondary)
+        }
       }
     }
     .task(id: trace.id) {

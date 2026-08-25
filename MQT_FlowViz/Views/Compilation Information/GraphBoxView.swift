@@ -10,7 +10,7 @@ import SwiftUI
 struct GraphBoxView: View {
   let title: String
   let seriesData: [ChartDataSet]
-  @State var selectedStep: Int?
+  @State private var selectedStep: Int?
 
   let chartDomain: [String]
   let chartColorRange: [Color]

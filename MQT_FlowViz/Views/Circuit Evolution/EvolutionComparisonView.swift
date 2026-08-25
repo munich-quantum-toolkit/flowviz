@@ -9,18 +9,18 @@ import SwiftUI
 struct EvolutionComparisonView: View {
   let trace: CompilationTrace
 
-  @State var currentStep: Int
-  @State var comparedStep: Int
-  @State var layoutHorizontal: Bool
+  @State private var currentStep: Int
+  @State private var comparedStep: Int
+  @State private var layoutHorizontal: Bool
 
-  @State var isLinked: Bool = false
+  @State private var isLinked: Bool = false
   @State private var isSyncing: Bool = false
 
   @State private var currentCircuit: ParsedCircuit? = nil
   @State private var comparedCircuit: ParsedCircuit? = nil
 
-  @State var parseErrorCurrentCircuit: String? = nil
-  @State var parseErrorComparedCircuit: String? = nil
+  @State private var parseErrorCurrentCircuit: String? = nil
+  @State private var parseErrorComparedCircuit: String? = nil
 
   let rowHeight: CGFloat = 40
   let minColumnWidth: CGFloat = 50
@@ -90,6 +90,7 @@ struct EvolutionComparisonView: View {
       loadComparedCircuit()
       syncSteps(fromPrimary: false, oldVal: oldStep, newVal: newStep)
     }
+    .onChange(of: trace) { _, _ in loadCircuits() }
     .hideKeyboardOnTap()
   }
 
@@ -131,6 +132,10 @@ struct EvolutionComparisonView: View {
             .foregroundStyle(.secondary)
             .symbolRenderingMode(.monochrome)
           }
+        } else if currentStep == nil {
+          Text(trace.steps.isEmpty ? "No compilation steps" : "No compilation step selected")
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(.secondary)
         } else {
           Text("Calculating...")
             .font(.subheadline.weight(.medium))
@@ -151,7 +156,13 @@ struct EvolutionComparisonView: View {
         dotmarkHelpText: actionType.capitalized
       ) {
         VStack(alignment: .center, spacing: 16) {
-          if let circuit = circuit {
+          if currentStep == nil {
+            Text(trace.steps.isEmpty ? "No compilation steps" : "No compilation step selected")
+              .font(.callout.weight(.semibold))
+              .foregroundStyle(.secondary)
+              .frame(maxWidth: .infinity)
+              .frame(height: 200)
+          } else if let circuit = circuit {
             CanvasRenderView(
               currentCircuit: circuit,
               rowHeight: rowHeight,
@@ -200,7 +211,7 @@ struct EvolutionComparisonView: View {
   /// Synchronizes the timelines when the link toggle is active.
   private func syncSteps(fromPrimary: Bool, oldVal: Int, newVal: Int) {
     // Prevent infinite loops caused by onChange ping-ponging
-    guard isLinked, !isSyncing else { return }
+    guard !trace.steps.isEmpty, isLinked, !isSyncing else { return }
     isSyncing = true
 
     let delta = newVal - oldVal
@@ -225,7 +236,11 @@ struct EvolutionComparisonView: View {
   }
 
   private func loadCurrentCircuit() {
-    guard currentStep >= 0 && currentStep < trace.steps.count else { return }
+    guard currentStep >= 0 && currentStep < trace.steps.count else {
+      currentCircuit = nil
+      parseErrorCurrentCircuit = nil
+      return
+    }
 
     withAnimation(.easeInOut(duration: 0.2)) {
       do {
@@ -239,7 +254,11 @@ struct EvolutionComparisonView: View {
   }
 
   private func loadComparedCircuit() {
-    guard comparedStep >= 0 && comparedStep < trace.steps.count else { return }
+    guard comparedStep >= 0 && comparedStep < trace.steps.count else {
+      comparedCircuit = nil
+      parseErrorComparedCircuit = nil
+      return
+    }
 
     withAnimation(.easeInOut(duration: 0.2)) {
       do {

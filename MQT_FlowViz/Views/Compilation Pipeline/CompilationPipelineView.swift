@@ -13,7 +13,7 @@ struct CompilationPipelineView: View {
   @State private var timelines: [TimelineSequence] = []
   let collapsedCount = 6
 
-  @State var expandedPipeline: Bool = false
+  @State private var expandedPipeline: Bool = false
 
   init(trace: CompilationTrace, selectedStep: Binding<Int>) {
     self.trace = trace
@@ -31,20 +31,22 @@ struct CompilationPipelineView: View {
             sequences: Array(timelines.prefix(expandedPipeline ? timelines.count : collapsedCount)),
             highlightedStep: $selectedStep, steps: trace.steps)
 
-          Button(action: {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.8, blendDuration: 0)) {
-              expandedPipeline.toggle()
+          if timelines.count > collapsedCount {
+            Button(action: {
+              withAnimation(.spring(response: 0.4, dampingFraction: 0.8, blendDuration: 0)) {
+                expandedPipeline.toggle()
+              }
+            }) {
+              Text(
+                expandedPipeline
+                  ? "Show less \(Image(systemName: "arrow.up"))"
+                  : "Show all (\(timelines.count - collapsedCount) more) \(Image(systemName: "arrow.down"))"
+              )
+              .font(.system(size: 12, weight: .semibold))
+              .foregroundStyle(Color.bluePrimary)
             }
-          }) {
-            Text(
-              expandedPipeline
-                ? "Show less \(Image(systemName: "arrow.up"))"
-                : "Show all (\(timelines.count - collapsedCount) more) \(Image(systemName: "arrow.down"))"
-            )
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(Color.bluePrimary)
+            .buttonStyle(.plain)
           }
-          .buttonStyle(.plain)
         }
       }
     }

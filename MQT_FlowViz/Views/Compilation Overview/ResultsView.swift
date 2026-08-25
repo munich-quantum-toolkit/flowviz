@@ -32,7 +32,7 @@ struct ResultsView: View {
           traceId: trace.id,
           icon: "checkmark.seal",
           title: "Estimated Success",
-          valueText: esp != nil ? String(format: "%.2f%", esp!) : "N/A",
+          valueText: esp?.formatted(.percent.precision(.fractionLength(2))) ?? "N/A",
           gaugeValue: esp,
         )
 
@@ -44,7 +44,7 @@ struct ResultsView: View {
           traceId: trace.id,
           icon: "gauge.with.dots.needle.bottom.100percent",
           title: "Expected Fidelity",
-          valueText: fidelity != nil ? String(format: "%.2f%", fidelity!) : "N/A",
+          valueText: fidelity?.formatted(.percent.precision(.fractionLength(2))) ?? "N/A",
           gaugeValue: fidelity,
         )
 
@@ -90,7 +90,7 @@ struct ResultsView: View {
 }
 
 struct ResultRowView: View {
-  let traceId: ObjectIdentifier
+  let traceId: String
   let icon: String
   let title: String
   let valueText: String
