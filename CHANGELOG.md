@@ -12,12 +12,14 @@ releases may include breaking changes.
 
 ### Added
 
+- 📝 Add a visual walkthrough of the application ([#4]) ([**@flowerthrower**])
 - ✨ Implement MQT FlowViz application ([**@linus-hologram**])
 - 🔧 Add the license and pre-commit configuration ([#1]) ([**@flowerthrower**])
 
 <!-- PR links -->
 
 [#1]: https://github.com/munich-quantum-toolkit/flowviz/pull/1
+[#4]: https://github.com/munich-quantum-toolkit/flowviz/pull/4
 
 <!-- Contributors -->
 
