@@ -1,62 +1,78 @@
-# Xcode
-#
-# gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
+# This file has been generated from an external template. Please do not modify it directly.
+# Changes should be contributed to https://github.com/munich-quantum-toolkit/templates.
 
-## User settings
-xcuserdata/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 
-## Obj-C/Swift specific
-*.hmap
+# Packaging
+/build/
+/dist/
+.eggs/
+*.egg
+*.egg-info/
+/_skbuild/
+/wheelhouse/
 
-## App packaging
-*.ipa
-*.dSYM.zip
-*.dSYM
+# Testing
+.coverage
+.coverage.*
+.hypothesis/
+.nox/
+.pytest_cache/
+.tox/
+*.cover
+*.profraw
+coverage.xml
+htmlcov/
 
-## Playgrounds
-timeline.xctimeline
-playground.xcworkspace
+# Documentation
+docs/_build/
+docs/**/build/
+docs/api/
 
-# Swift Package Manager
-#
-# Add this line if you want to avoid checking in source code from Swift Package Manager dependencies.
-# Packages/
-# Package.pins
-# Package.resolved
-# *.xcodeproj
-#
-# Xcode automatically generates this directory with a .xcworkspacedata file and xcuserdata
-# hence it is not needed unless you have added a package configuration file to your project
-# .swiftpm
+# Environments
+.env
+.env.*
+!.env.example
+!.env.*.example
+.venv/
+env/
+venv/
 
-.build/
+# Tool caches
+.cache/
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+.rumdl_cache/
 
-# CocoaPods
-#
-# We recommend against adding the Pods directory to your .gitignore. However
-# you should judge for yourself, the pros and cons are mentioned at:
-# https://guides.cocoapods.org/using/using-cocoapods.html#should-i-check-the-pods-directory-into-source-control
-#
-# Pods/
-#
-# Add this line if you want to avoid checking in source code from the Xcode workspace
-# *.xcworkspace
+# Jupyter
+.ipynb_checkpoints/
 
-# Carthage
-#
-# Add this line if you want to avoid checking in source code from Carthage dependencies.
-# Carthage/Checkouts
+# Versioning
+python/**/_version.py
+src/**/_version.py
 
-Carthage/Build/
+# Editors
+.idea/
+.vs/
+.vscode/
+*.swp
+*~
 
-# fastlane
-#
-# It is recommended to not store the screenshots in the git repo.
-# Instead, use fastlane to re-generate the screenshots whenever they are needed.
-# For more information about the recommended setup visit:
-# https://docs.fastlane.tools/best-practices/source-control/#source-control
+# Claude
+.claude/
+CLAUDE.md
 
-fastlane/report.xml
-fastlane/Preview.html
-fastlane/screenshots/**/*.png
-fastlane/test_output
+# Operating systems
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
