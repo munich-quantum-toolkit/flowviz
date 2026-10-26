@@ -37,7 +37,7 @@ repos:
 
   ## Format and lint Swift files with swift-format
   - repo: https://github.com/swiftlang/swift-format
-    rev: 603.0.0
+    rev: 604.0.0
     hooks:
       - id: swift-format
         priority: 5
